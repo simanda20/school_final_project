@@ -20,9 +20,10 @@ class Querry:
             url = "http://127.0.0.1/webScraping/actions/data_listener.php",
             data = {
                 "token": self.__app_token,
-                "data": json.dump(self.__processed_products)
+                "data": json.dumps(self.__processed_products)
             }
         )
+        print(req.text)
 
 
 
@@ -32,8 +33,8 @@ class Querry:
         product_price_not_sep = re.sub(r'\s+', '', product_price_sep) # get product price without separation
         product_price = int(product_price_not_sep.replace(",-", "")) # get rid of ',-' and get int from product price
         product_code = product.get("data-code") # code of product
-        product_id = shop_name + product.get("data-id") # product id used by eshop with shopname at start
-        product_link = shop_url + product.find("a", {"class": "browsinglink"}).get("href") # product link
+        product_id = self.__shop_name + product.get("data-id") # product id used by eshop with shopname at start
+        product_link = self.__shop_url + product.find("a", {"class": "browsinglink"}).get("href") # product link
 
         self.__processed_products.append({
             "name": product_name,
