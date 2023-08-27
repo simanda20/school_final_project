@@ -33,12 +33,10 @@ class Querry:
             product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
             product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
             product_price = int(
-                product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+            product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
             product_code = json.loads(product.get("data-track"))["id"]  # code of product
-            product_id = self.__shop_name + json.loads(product.get("data-track"))[
-                "id"]  # product id used by eshop with shopname at start
-            product_link = self.__shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get(
-                "href")  # product link
+            product_id = self.__shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
+            product_link = self.__shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
 
             self.__processed_products.append({
                 "name": product_name,
