@@ -3,12 +3,12 @@ from time import sleep # import sleep
 import requests # import request
 from bs4 import BeautifulSoup # import beautiful soup
 import json # import json
+from os.path import exists # checker of file existence
 
 class Querry:
     """
         class representicng web querry
     """
-
     def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class):
         self.shop_name = _shop_name  # shop name
         self.shop_url = _shop_url  # shop url
@@ -65,14 +65,19 @@ class Querry:
 
         self.send_products()
 
-
-
 class Querry_Alza(Querry):
     """
         class representing web querry for Alza
     """
-    def __init__(self):
-        super().__init__("Alza", "https://www.alza.cz", "https://www.alza.cz/televize/18849604-p$page.htm", 1, 1, "box")
+    def __init__(self, link):
+        super().__init__(
+            "Alza",
+            "https://www.alza.cz",
+            link,
+            1,
+            1,
+            "box"
+        )
 
     def process_product(self, product):
         product_name = product.find("a", {"class": "name"}).text # get product name
@@ -94,5 +99,101 @@ class Querry_Alza(Querry):
         })
         print(self.processed_products[-1])
 
-alza_querry = Querry_Alza()
-alza_querry.main_loop()
+class Querry_CZC(Querry):
+    """
+        class representing web querry for CZC
+    """
+    def __init__(self, link):
+        super().__init__(
+            "CZC",
+            "https://www.czc.cz",
+            link,
+            0,
+            27,
+            "new-tile"
+        )
+
+    def __process_product(self, product):
+        product_name = product.find("div", {"class": "overflow"}).find("a").text  # get product name
+        product_price_sep = product.find("span", {"class": "price-vatin"}).text  # get product price with separation
+        product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
+        product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+        product_code = product.get("data-product-code")  # code of product
+        product_id = self.__shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
+        product_link = self.__shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
+
+        self.__processed_products.append({
+            "name": product_name,
+            "price": product_price,
+            "code": product_code,
+            "id": product_id,
+            "link": product_link,
+            "shop_name": self.__shop_name,
+            "shop_url": self.__shop_url,
+        })
+        print(self.__processed_products[-1])
+
+
+class Querry_Datart(Querry):
+    """
+        class representing web querry for Datart
+    """
+    def __init__(self , link):
+        super().__init__(
+            "Datart",
+            "https://www.datart.cz",
+            link,
+            1,
+            1,
+            "product-box"
+        )
+
+    def __process_product(self, product):
+        try:
+            product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
+            product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
+            product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
+            product_price = int(
+            product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+            product_code = json.loads(product.get("data-track"))["id"]  # code of product
+            product_id = self.__shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
+            product_link = self.__shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
+            product_sale = False
+
+            self.__processed_products.append({
+                "name": product_name,
+                "price": product_price,
+                "code": product_code,
+                "id": product_id,
+                "link": product_link,
+                "sale": product_sale,
+                "shop_name": self.__shop_name,
+                "shop_url": self.__shop_url,
+            })
+            print(self.__processed_products[-1])
+        except Exception as e:
+            print(e)
+
+if exists("pages.csv"): # check existention of shop configuration file
+    sites = []
+    querries = []
+    with open("pages.csv", "r") as file: # open file and read data
+        sites = file.readlines()
+        file.close()
+
+    if len(sites) > 0: # if are there any data
+        for site in sites:
+            site = site.split(";") # initialize querries
+            match site[0]:
+                case "Alza":
+                    querries.append(Querry_Alza(site[1].replace("\n", "")))
+                case "CZC":
+                    querries.append(Querry_CZC(site[1].replace("\n", "")))
+                case "Datart":
+                    querries.append(Querry_Datart(site[1].replace("\n", "")))
+                case _:
+                    print("fuck off")
+
+        if len(querries) > 0:
+            for querry in querries: # start all querries
+                querry.main_loop()
