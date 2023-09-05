@@ -37,6 +37,7 @@ class Querry:
             product_code = json.loads(product.get("data-track"))["id"]  # code of product
             product_id = self.__shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
             product_link = self.__shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
+            product_sale = False
 
             self.__processed_products.append({
                 "name": product_name,
@@ -44,6 +45,7 @@ class Querry:
                 "code": product_code,
                 "id": product_id,
                 "link": product_link,
+                "sale": product_sale,
                 "shop_name": self.__shop_name,
                 "shop_url": self.__shop_url,
             })
