@@ -197,3 +197,8 @@ if exists("pages.csv"): # check existention of shop configuration file
         if len(querries) > 0:
             for querry in querries: # start all querries
                 querry.main_loop()
+
+else:
+    with open("pages.csv", "x") as file: # create file if not exist
+        file.write("")
+        file.close()
