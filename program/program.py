@@ -186,13 +186,13 @@ if exists("pages.csv"): # check existention of shop configuration file
             site = site.split(";") # initialize querries
             match site[0]:
                 case "Alza":
-                    querries.append(Querry_Alza(site[1].replace("\n", "")))
+                    querries.append(Querry_Alza(site[1].replace("\n", ""))) # create new alza querry
                 case "CZC":
-                    querries.append(Querry_CZC(site[1].replace("\n", "")))
+                    querries.append(Querry_CZC(site[1].replace("\n", ""))) # create new CZC querry
                 case "Datart":
-                    querries.append(Querry_Datart(site[1].replace("\n", "")))
+                    querries.append(Querry_Datart(site[1].replace("\n", ""))) # create new Datart querry
                 case _:
-                    print("fuck off")
+                    print("fuck off") # else
 
         if len(querries) > 0:
             for querry in querries: # start all querries
