@@ -3,7 +3,10 @@ from time import sleep # import sleep
 import requests # import request
 from bs4 import BeautifulSoup # import beautiful soup
 import json # import json
+import os # import os
 from os.path import exists # checker of file existence
+import logging # import logging
+import datetime # import datetime
 
 class Querry:
     """
@@ -80,24 +83,29 @@ class Querry_Alza(Querry):
         )
 
     def process_product(self, product):
-        product_name = product.find("a", {"class": "name"}).text # get product name
-        product_price_sep = product.find("span", {"class": "price-box__price"}).text # get product price with separation
-        product_price_not_sep = re.sub(r'\s+', '', product_price_sep) # get product price without separation
-        product_price = int(product_price_not_sep.replace(",-", "")) # get rid of ',-' and get int from product price
-        product_code = product.get("data-code") # code of product
-        product_id = self.shop_name + product.get("data-id") # product id used by eshop with shopname at start
-        product_link = self.shop_url + product.find("a", {"class": "browsinglink"}).get("href") # product link
+        try:
+            product_name = product.find("a", {"class": "name"}).text  # get product name
+            product_price_sep = product.find("span",{"class": "price-box__price"}).text  # get product price with separation
+            product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
+            product_price = int(product_price_not_sep.replace(",-", ""))  # get rid of ',-' and get int from product price
+            product_code = product.get("data-code")  # code of product
+            product_id = self.shop_name + product.get("data-id")  # product id used by eshop with shopname at start
+            product_link = self.shop_url + product.find("a", {"class": "browsinglink"}).get("href")  # product link
+            product_sale = False
 
-        self.processed_products.append({
-            "name": product_name,
-            "price": product_price,
-            "code": product_code,
-            "id": product_id,
-            "link": product_link,
-            "shop_name": self.shop_name,
-            "shop_url": self.shop_url,
-        })
-        print(self.processed_products[-1])
+            self.processed_products.append({
+                "name": product_name,
+                "price": product_price,
+                "code": product_code,
+                "id": product_id,
+                "link": product_link,
+                "sale": product_sale,
+                "shop_name": self.shop_name,
+                "shop_url": self.shop_url,
+            })
+            print(self.processed_products[-1])
+        except Exception as e:
+            print(e)
 
 class Querry_CZC(Querry):
     """
@@ -113,26 +121,30 @@ class Querry_CZC(Querry):
             "new-tile"
         )
 
-    def __process_product(self, product):
-        product_name = product.find("div", {"class": "overflow"}).find("a").text  # get product name
-        product_price_sep = product.find("span", {"class": "price-vatin"}).text  # get product price with separation
-        product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
-        product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
-        product_code = product.get("data-product-code")  # code of product
-        product_id = self.__shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
-        product_link = self.__shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
+    def process_product(self, product):
+        try:
+            product_name = product.find("div", {"class": "overflow"}).find("a").text  # get product name
+            product_price_sep = product.find("span", {"class": "price-vatin"}).text  # get product price with separation
+            product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
+            product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+            product_code = product.get("data-product-code")  # code of product
+            product_id = self.shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
+            product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
+            product_sale = False
 
-        self.__processed_products.append({
-            "name": product_name,
-            "price": product_price,
-            "code": product_code,
-            "id": product_id,
-            "link": product_link,
-            "shop_name": self.__shop_name,
-            "shop_url": self.__shop_url,
-        })
-        print(self.__processed_products[-1])
-
+            self.processed_products.append({
+                "name": product_name,
+                "price": product_price,
+                "code": product_code,
+                "id": product_id,
+                "link": product_link,
+                "sale": product_sale,
+                "shop_name": self.shop_name,
+                "shop_url": self.shop_url,
+            })
+            print(self.processed_products[-1])
+        except Exception as e:
+            print(e)
 
 class Querry_Datart(Querry):
     """
@@ -148,29 +160,28 @@ class Querry_Datart(Querry):
             "product-box"
         )
 
-    def __process_product(self, product):
+    def process_product(self, product):
         try:
             product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
             product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
             product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
-            product_price = int(
-            product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+            product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
             product_code = json.loads(product.get("data-track"))["id"]  # code of product
-            product_id = self.__shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
-            product_link = self.__shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
+            product_id = self.shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
+            product_link = self.shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
             product_sale = False
 
-            self.__processed_products.append({
+            self.processed_products.append({
                 "name": product_name,
                 "price": product_price,
                 "code": product_code,
                 "id": product_id,
                 "link": product_link,
                 "sale": product_sale,
-                "shop_name": self.__shop_name,
-                "shop_url": self.__shop_url,
+                "shop_name": self.shop_name,
+                "shop_url": self.shop_url,
             })
-            print(self.__processed_products[-1])
+            print(self.processed_products[-1])
         except Exception as e:
             print(e)
 
