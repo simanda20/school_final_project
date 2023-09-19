@@ -12,13 +12,14 @@ class Querry:
     """
         class representicng web querry
     """
-    def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class):
+    def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type):
         self.shop_name = _shop_name  # shop name
         self.shop_url = _shop_url  # shop url
         self.url = _url  # prep url
+        self.product_type = _product_type # product type
         self.starting_page = _starting_page # starting page
         self.page_offset = _page_offset # page offset
-        self.produt_box_class = _product_box_class # product box class
+        self.product_box_class = _product_box_class # product box class
         self.app_token = 123456789  # token
         self.processed_products = [] # processed products
 
@@ -50,7 +51,7 @@ class Querry:
 
             body = soup.find("body")  # find html body
 
-            products = body.find_all("div", {"class": self.produt_box_class})  # get boxes
+            products = body.find_all("div", {"class": self.product_box_class})  # get boxes
 
             if len(products) == 0:  # if we already seen all products break loop
                 has_products = False
@@ -72,14 +73,15 @@ class Querry_Alza(Querry):
     """
         class representing web querry for Alza
     """
-    def __init__(self, link):
+    def __init__(self, _link, _product_type):
         super().__init__(
             "Alza",
             "https://www.alza.cz",
-            link,
+            _link,
             1,
             1,
-            "box"
+            "box",
+            _product_type
         )
 
     def process_product(self, product):
@@ -102,6 +104,7 @@ class Querry_Alza(Querry):
                 "sale": product_sale,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
+                "product_type": self.product_type
             })
             print(self.processed_products[-1])
         except Exception as e:
@@ -111,19 +114,20 @@ class Querry_CZC(Querry):
     """
         class representing web querry for CZC
     """
-    def __init__(self, link):
+    def __init__(self, _link, _product_type):
         super().__init__(
             "CZC",
             "https://www.czc.cz",
-            link,
+            _link,
             0,
             27,
-            "new-tile"
+            "new-tile",
+            _product_type
         )
 
     def process_product(self, product):
         try:
-            product_name = product.find("div", {"class": "overflow"}).find("a").text  # get product name
+            product_name = product.find("div", {"class": "overflow"}).find("a").text.split("\n")[0]  # get product name
             product_price_sep = product.find("span", {"class": "price-vatin"}).text  # get product price with separation
             product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
             product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
@@ -141,6 +145,7 @@ class Querry_CZC(Querry):
                 "sale": product_sale,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
+                "product_type": self.product_type
             })
             print(self.processed_products[-1])
         except Exception as e:
@@ -150,14 +155,15 @@ class Querry_Datart(Querry):
     """
         class representing web querry for Datart
     """
-    def __init__(self , link):
+    def __init__(self , _link, _product_type):
         super().__init__(
             "Datart",
             "https://www.datart.cz",
-            link,
+            _link,
             1,
             1,
-            "product-box"
+            "product-box",
+            _product_type
         )
 
     def process_product(self, product):
@@ -180,6 +186,7 @@ class Querry_Datart(Querry):
                 "sale": product_sale,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
+                "product_type": self.product_type
             })
             print(self.processed_products[-1])
         except Exception as e:
@@ -197,11 +204,11 @@ if exists("pages.csv"): # check existention of shop configuration file
             site = site.split(";") # initialize querries
             match site[0]:
                 case "Alza":
-                    querries.append(Querry_Alza(site[1].replace("\n", ""))) # create new alza querry
+                    querries.append(Querry_Alza(site[2].replace("\n", ""), site[1])) # create new alza querry
                 case "CZC":
-                    querries.append(Querry_CZC(site[1].replace("\n", ""))) # create new CZC querry
+                    querries.append(Querry_CZC(site[2].replace("\n", ""), site[1])) # create new CZC querry
                 case "Datart":
-                    querries.append(Querry_Datart(site[1].replace("\n", ""))) # create new Datart querry
+                    querries.append(Querry_Datart(site[2].replace("\n", ""), site[1])) # create new Datart querry
                 case _:
                     print("fuck off") # else
 
