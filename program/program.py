@@ -8,11 +8,43 @@ from os.path import exists # checker of file existence
 import logging # import logging
 from datetime import datetime, timedelta # import datetime and delta time
 
+def get_time_difference():
+    """
+
+    :return:
+    """
+    current_time = datetime.now() # get current time
+    next_day = current_time + timedelta(days=1) # get next day
+    next_day = next_day.replace(hour=1, minute=0, second=0, microsecond=0) # get first hour of next day
+    time_difference = next_day - current_time # calculate time difference
+    return time_difference.total_seconds() # convert time difference to seconds and return
+
+def get_number(num):
+    """
+
+    :param num:
+    :return:
+    """
+    # TODO: create function for searching for number
+
+    pass
+
+
 class Querry:
     """
         class representicng web querry
     """
     def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type):
+        """
+
+        :param _shop_name:
+        :param _shop_url:
+        :param _url:
+        :param _starting_page:
+        :param _page_offset:
+        :param _product_box_class:
+        :param _product_type:
+        """
         self.shop_name = _shop_name  # shop name
         self.shop_url = _shop_url  # shop url
         self.url = _url  # prep url
@@ -24,6 +56,10 @@ class Querry:
         self.processed_products = [] # processed products
 
     def send_products(self):
+        """
+
+        :return:
+        """
         req = requests.post(
             url = "http://127.0.0.1/webScraping/actions/data_listener.php",
             data = {
@@ -31,12 +67,21 @@ class Querry:
                 "data": json.dumps(self.processed_products)
             }
         )
-        print(req.text)
+        print(req.text) # TODO: i dont know what to do
 
     def process_product(self, product):
+        """
+
+        :param product:
+        :return:
+        """
         pass
 
     def main_loop(self):
+        """
+
+        :return:
+        """
         has_products = True  # while checker
         page = self.starting_page  # page
         first_product = ""  # variable with first product
@@ -74,6 +119,11 @@ class Querry_Alza(Querry):
         class representing web querry for Alza
     """
     def __init__(self, _link, _product_type):
+        """
+
+        :param _link:
+        :param _product_type:
+        """
         super().__init__(
             "Alza",
             "https://www.alza.cz",
@@ -85,6 +135,11 @@ class Querry_Alza(Querry):
         )
 
     def process_product(self, product):
+        """
+
+        :param product:
+        :return:
+        """
         try:
             product_name = product.find("a", {"class": "name"}).text  # get product name
             product_price_sep = product.find("span",{"class": "price-box__price"}).text  # get product price with separation
@@ -93,7 +148,13 @@ class Querry_Alza(Querry):
             product_code = product.get("data-code")  # code of product
             product_id = self.shop_name + product.get("data-id")  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("a", {"class": "browsinglink"}).get("href")  # product link
-            product_sale = False
+            product_price_box = product.find("div", {"class": "price-box"}) # get pricebox
+            product_price_box_classes = product_price_box.get("class") # get pricebox classes
+            product_sale = "price-box--Discount" in product_price_box_classes # check if product has discount
+            product_sale_percentage = None
+            if product_sale:
+                product_sale_percentage = get_number(product_sale.find("span", {"class": "price-box__header-text"}))
+
 
             self.processed_products.append({
                 "name": product_name,
@@ -115,6 +176,11 @@ class Querry_CZC(Querry):
         class representing web querry for CZC
     """
     def __init__(self, _link, _product_type):
+        """
+
+        :param _link:
+        :param _product_type:
+        """
         super().__init__(
             "CZC",
             "https://www.czc.cz",
@@ -126,6 +192,11 @@ class Querry_CZC(Querry):
         )
 
     def process_product(self, product):
+        """
+
+        :param product:
+        :return:
+        """
         try:
             product_name = product.find("div", {"class": "overflow"}).find("a").text.split("\n")[0]  # get product name
             product_price_sep = product.find("span", {"class": "price-vatin"}).text  # get product price with separation
@@ -156,6 +227,11 @@ class Querry_Datart(Querry):
         class representing web querry for Datart
     """
     def __init__(self , _link, _product_type):
+        """
+
+        :param _link:
+        :param _product_type:
+        """
         super().__init__(
             "Datart",
             "https://www.datart.cz",
@@ -167,6 +243,11 @@ class Querry_Datart(Querry):
         )
 
     def process_product(self, product):
+        """
+
+        :param product:
+        :return:
+        """
         try:
             product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
             product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
@@ -191,13 +272,6 @@ class Querry_Datart(Querry):
             print(self.processed_products[-1])
         except Exception as e:
             print(e)
-
-def get_time_difference():
-    current_time = datetime.now() # get current time
-    next_day = current_time + timedelta(days=1) # get next day
-    next_day = next_day.replace(hour=1, minute=0, second=0, microsecond=0) # get first hour of next day
-    time_difference = next_day - current_time # calculate time difference
-    return time_difference.total_seconds() # convert time difference to seconds and return
 
 run = True
 while run:
