@@ -6,7 +6,7 @@ import json # import json
 import os # import os
 from os.path import exists # checker of file existence
 import logging # import logging
-import datetime # import datetime
+from datetime import datetime, timedelta # import datetime and delta time
 
 class Querry:
     """
@@ -192,31 +192,46 @@ class Querry_Datart(Querry):
         except Exception as e:
             print(e)
 
-if exists("pages.csv"): # check existention of shop configuration file
-    sites = []
-    querries = []
-    with open("pages.csv", "r") as file: # open file and read data
-        sites = file.readlines()
-        file.close()
+def get_time_difference():
+    current_time = datetime.now() # get current time
+    next_day = current_time + timedelta(days=1) # get next day
+    next_day = next_day.replace(hour=1, minute=0, second=0, microsecond=0) # get hour of next day
+    time_difference = next_day - current_time # calculate time difference
+    return time_difference.total_seconds() # convert time difference to seconds and return
 
-    if len(sites) > 0: # if are there any data
-        for site in sites:
-            site = site.split(";") # initialize querries
-            match site[0]:
-                case "Alza":
-                    querries.append(Querry_Alza(site[2].replace("\n", ""), site[1])) # create new alza querry
-                case "CZC":
-                    querries.append(Querry_CZC(site[2].replace("\n", ""), site[1])) # create new CZC querry
-                case "Datart":
-                    querries.append(Querry_Datart(site[2].replace("\n", ""), site[1])) # create new Datart querry
-                case _:
-                    print("fuck off") # else
+run = True
+while run:
+    if exists("pages.csv"):  # check existention of shop configuration file
+        sites = []
+        querries = []
+        with open("pages.csv", "r") as file:  # open file and read data
+            sites = file.readlines()
+            file.close()
 
-        if len(querries) > 0:
-            for querry in querries: # start all querries
-                querry.main_loop()
+        if len(sites) > 0:  # if are there any data
+            for site in sites:
+                site = site.split(";")  # initialize querries
+                match site[0]:
+                    case "Alza":
+                        querries.append(Querry_Alza(site[2].replace("\n", ""), site[1]))  # create new alza querry
+                    case "CZC":
+                        querries.append(Querry_CZC(site[2].replace("\n", ""), site[1]))  # create new CZC querry
+                    case "Datart":
+                        querries.append(Querry_Datart(site[2].replace("\n", ""), site[1]))  # create new Datart querry
+                    case _:
+                        print("fuck off")  # else
 
-else:
-    with open("pages.csv", "x") as file: # create file if not exist
-        file.write("")
-        file.close()
+            if len(querries) > 0:
+                for querry in querries:  # start all querries
+                    querry.main_loop()
+
+                sleep(get_time_difference())  # repeat every day at 1AM
+            else:
+                run = False
+        else:
+            run = False
+    else:
+        with open("pages.csv", "x") as file:  # create file if not exist
+            file.write("")
+            file.close()
+        run = False
