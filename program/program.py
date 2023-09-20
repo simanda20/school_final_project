@@ -11,7 +11,7 @@ from datetime import datetime, timedelta # import datetime and delta time
 def get_time_difference():
     """
 
-    :return:
+    :return: float time difference
     """
     current_time = datetime.now() # get current time
     next_day = current_time + timedelta(days=1) # get next day
@@ -23,11 +23,15 @@ def get_number(num):
     """
 
     :param num:
-    :return:
+    :return: int
     """
-    # TODO: create function for searching for number
+    # no_seps = re.sub(r'\s+', '', num)
+    digits_only = ""
+    for c in no_seps:
+        if c.isdigit():
+            digits_only += c # add every character if it is a digit
 
-    pass
+    return int(digits_only)
 
 
 class Querry:
@@ -67,13 +71,12 @@ class Querry:
                 "data": json.dumps(self.processed_products)
             }
         )
-        print(req.text) # TODO: i dont know what to do
+        print(req.text)
 
     def process_product(self, product):
         """
 
         :param product:
-        :return:
         """
         pass
 
@@ -137,24 +140,22 @@ class Querry_Alza(Querry):
     def process_product(self, product):
         """
 
-        :param product:
+        :param product: html element of product with needed data
         :return:
         """
         try:
             product_name = product.find("a", {"class": "name"}).text  # get product name
             product_price_sep = product.find("span",{"class": "price-box__price"}).text  # get product price with separation
-            product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
-            product_price = int(product_price_not_sep.replace(",-", ""))  # get rid of ',-' and get int from product price
+            product_price = get_number(product_price_sep) # get price
             product_code = product.get("data-code")  # code of product
             product_id = self.shop_name + product.get("data-id")  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("a", {"class": "browsinglink"}).get("href")  # product link
             product_price_box = product.find("div", {"class": "price-box"}) # get pricebox
             product_price_box_classes = product_price_box.get("class") # get pricebox classes
-            product_sale = "price-box--Discount" in product_price_box_classes # check if product has discount
-            product_sale_percentage = None
-            if product_sale:
-                product_sale_percentage = get_number(product_sale.find("span", {"class": "price-box__header-text"}))
-
+            product_discount = "price-box--Discount" in product_price_box_classes # check if product has discount
+            product_discount_percentage = None
+            if product_discount:
+                product_discount_percentage = get_number(product_price_box.find("span", {"class": "price-box__header-text"})) # discount in percentage
 
             self.processed_products.append({
                 "name": product_name,
@@ -162,7 +163,8 @@ class Querry_Alza(Querry):
                 "code": product_code,
                 "id": product_id,
                 "link": product_link,
-                "sale": product_sale,
+                "discount": product_discount,
+                "discount_percentage": product_discount_percentage,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
@@ -194,18 +196,22 @@ class Querry_CZC(Querry):
     def process_product(self, product):
         """
 
-        :param product:
+        :param product: html element of product with needed data
         :return:
         """
         try:
             product_name = product.find("div", {"class": "overflow"}).find("a").text.split("\n")[0]  # get product name
-            product_price_sep = product.find("span", {"class": "price-vatin"}).text  # get product price with separation
-            product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
-            product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+            price_wrapper = product.find("div", {"class": "pd-price-wrapper"})
+            product_price_sep = price_wrapper.find("span", {"class": "price-vatin"}).text  # get product price with separation
+            product_price = get_number(product_price_sep)  # get price
             product_code = product.get("data-product-code")  # code of product
             product_id = self.shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
-            product_sale = False
+            product_discount = product.find("span", {"class": "price-before"}) is not None # check if product is in sale
+            product_discount_percentage = None
+            if product_discount:
+                price_before = product.find("span", {"class": "price-before"})
+                product_discount_percentage = 100 - int((get_number(price_before.find("span", {"class": "price-vatin"})) * 100) / product_price) # count discount percentage
 
             self.processed_products.append({
                 "name": product_name,
@@ -213,7 +219,8 @@ class Querry_CZC(Querry):
                 "code": product_code,
                 "id": product_id,
                 "link": product_link,
-                "sale": product_sale,
+                "discount": product_discount,
+                "discount_percentage": product_discount_percentage,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
@@ -251,12 +258,15 @@ class Querry_Datart(Querry):
         try:
             product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
             product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
-            product_price_not_sep = re.sub(r'\s+', '', product_price_sep)  # get product price without separation
-            product_price = int(product_price_not_sep.replace("Kč", ""))  # get rid of ',-' or 'Kč' and get int from product price
+            product_price = get_number(product_price_sep) # get price
             product_code = json.loads(product.get("data-track"))["id"]  # code of product
             product_id = self.shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
-            product_sale = False
+            product_discount = product.find("span", {"class": "cut-price"}) is not None
+            product_discount_percentage = None
+            if product_discount:
+                price_before = product.find("span", {"class": "cut-price"})
+                product_discount_percentage = 100 - int((get_number(price_before.find("del")) * 100) / product_price) # count discount percentage
 
             self.processed_products.append({
                 "name": product_name,
@@ -264,7 +274,8 @@ class Querry_Datart(Querry):
                 "code": product_code,
                 "id": product_id,
                 "link": product_link,
-                "sale": product_sale,
+                "discount": product_discount,
+                "discount_percentage": product_discount_percentage,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
