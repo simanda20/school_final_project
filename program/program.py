@@ -25,14 +25,12 @@ def get_number(num):
     :param num:
     :return: int
     """
-    # no_seps = re.sub(r'\s+', '', num)
-    digits_only = ""
-    for c in no_seps:
-        if c.isdigit():
-            digits_only += c # add every character if it is a digit
+    numbers_only = ""
+    for c in num:
+        if c.isnumeric():
+            numbers_only += c # add every character if it is a digit
 
-    return int(digits_only)
-
+    return int(numbers_only) # return number
 
 class Querry:
     """
@@ -64,14 +62,17 @@ class Querry:
 
         :return:
         """
-        req = requests.post(
-            url = "http://127.0.0.1/webScraping/actions/data_listener.php",
-            data = {
-                "token": self.app_token,
-                "data": json.dumps(self.processed_products)
-            }
-        )
-        print(req.text)
+        try:
+            req = requests.post( # send data on web
+                url="http://127.0.0.1/webScraping/actions/data_listener.php",
+                data={
+                    "token": self.app_token,
+                    "data": json.dumps(self.processed_products)
+                }
+            )
+            print(req.text)
+        except Exception as e:
+            print(e)
 
     def process_product(self, product):
         """
@@ -92,26 +93,31 @@ class Querry:
         while has_products:
             print(page)
             cur_url = self.url.replace("$page", str(page))  # current url address
-            req = requests.get(cur_url)  # get request
-            content = req.text  # get html of page
+            try:
+                req = requests.get(cur_url)  # get request
+                content = req.text  # get html of page
 
-            soup = BeautifulSoup(content, "html.parser")  # create beautifulsoup
+                soup = BeautifulSoup(content, "html.parser")  # create beautifulsoup
 
-            body = soup.find("body")  # find html body
+                body = soup.find("body")  # find html body
 
-            products = body.find_all("div", {"class": self.product_box_class})  # get boxes
+                products = body.find_all("div", {"class": self.product_box_class})  # get boxes
 
-            if len(products) == 0:  # if we already seen all products break loop
-                has_products = False
+                if len(products) == 0:  # if we already seen all products break loop
+                    has_products = False
+                    break
+
+                if first_product == "":  # if loop started, get first product to compare
+                    first_product = products[0]
+
+                for product in products:  # process all products
+                    self.process_product(product)
+
+                page += self.page_offset  # load new page
+
+            except Exception as e:
+                print(e)
                 break
-
-            if first_product == "":  # if loop started, get first product to compare
-                first_product = products[0]
-
-            for product in products:  # process all products
-                self.process_product(product)
-
-            page += self.page_offset  # load new page
 
             sleep(5)  # anti block waiting
 
@@ -153,9 +159,9 @@ class Querry_Alza(Querry):
             product_price_box = product.find("div", {"class": "price-box"}) # get pricebox
             product_price_box_classes = product_price_box.get("class") # get pricebox classes
             product_discount = "price-box--Discount" in product_price_box_classes # check if product has discount
-            product_discount_percentage = None
+            product_discount_percentage = 0
             if product_discount:
-                product_discount_percentage = get_number(product_price_box.find("span", {"class": "price-box__header-text"})) # discount in percentage
+                product_discount_percentage = get_number(product_price_box.find("span", {"class": "price-box__header-text"}).text) # discount in percentage
 
             self.processed_products.append({
                 "name": product_name,
@@ -208,10 +214,11 @@ class Querry_CZC(Querry):
             product_id = self.shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
             product_discount = product.find("span", {"class": "price-before"}) is not None # check if product is in sale
-            product_discount_percentage = None
+            product_discount_percentage = 0
             if product_discount:
                 price_before = product.find("span", {"class": "price-before"})
-                product_discount_percentage = 100 - int((get_number(price_before.find("span", {"class": "price-vatin"})) * 100) / product_price) # count discount percentage
+                product_discount_percentage = 100 - ((product_price * 100) / int((get_number(price_before.find("span", {"class": "price-vatin"}).text)))) # count discount percentage
+                product_discount_percentage = int(round(product_discount_percentage)) # get round number
 
             self.processed_products.append({
                 "name": product_name,
@@ -255,6 +262,7 @@ class Querry_Datart(Querry):
         :param product:
         :return:
         """
+        # TODO: Vrací chybu
         try:
             product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
             product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
@@ -262,11 +270,12 @@ class Querry_Datart(Querry):
             product_code = json.loads(product.get("data-track"))["id"]  # code of product
             product_id = self.shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
-            product_discount = product.find("span", {"class": "cut-price"}) is not None
-            product_discount_percentage = None
+            product_discount = product.find("span", {"class": "query-icon"}) is not None
+            product_discount_percentage = 0
             if product_discount:
                 price_before = product.find("span", {"class": "cut-price"})
-                product_discount_percentage = 100 - int((get_number(price_before.find("del")) * 100) / product_price) # count discount percentage
+                product_discount_percentage = 100 - ((product_price * 100) / int((get_number(price_before.find("del").text)))) # count discount percentage
+                product_discount_percentage = int(round(product_discount_percentage)) # get round number
 
             self.processed_products.append({
                 "name": product_name,
@@ -304,7 +313,7 @@ while run:
                     case "Datart":
                         querries.append(Querry_Datart(site[2].replace("\n", ""), site[1]))  # create new Datart querry
                     case _:
-                        print("fuck off")  # else
+                        print("Unknown querry")  # else
 
             if len(querries) > 0:
                 for querry in querries:  # start all querries
