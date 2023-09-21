@@ -321,11 +321,21 @@ while run:
 
                 sleep(get_time_difference())  # repeat every day at 1AM
             else:
+                print("File has not any valid quarries")
                 run = False
+                input("Press ENTER to exit")
         else:
+            print("File has not data inside")
             run = False
+            input("Press ENTER to exit")
     else:
         with open("pages.csv", "x") as file:  # create file if not exist
             file.write("")
+            print("File 'pages.csv' had been created")
+            print("Please add your shops in csv format and start app again")
+            print("ShopName;ProductType;SearchedLink with $page pointer")
             file.close()
+
         run = False
+        input("Press ENTER to exit")
+
