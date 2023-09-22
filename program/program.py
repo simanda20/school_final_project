@@ -32,6 +32,16 @@ def get_number(num):
 
     return int(numbers_only) # return number
 
+def get_pure_text(text):
+    """
+
+    :param text:
+    :return:
+    """
+    text = text.replace("\n", "") # remove line breaks
+    text = re.sub(r'\s+', '', text) # remove spaces
+    return text
+
 class Querry:
     """
         class representicng web querry
@@ -56,6 +66,7 @@ class Querry:
         self.product_box_class = _product_box_class # product box class
         self.app_token = 123456789  # token
         self.processed_products = [] # processed products
+        self.send_on_url = "http://mujweb.simane.cz/actions/data_listener.php" # url for saving data
 
     def send_products(self):
         """
@@ -64,7 +75,7 @@ class Querry:
         """
         try:
             req = requests.post( # send data on web
-                url="http://127.0.0.1/webScraping/actions/data_listener.php",
+                url=self.send_on_url,
                 data={
                     "token": self.app_token,
                     "data": json.dumps(self.processed_products)
@@ -159,9 +170,12 @@ class Querry_Alza(Querry):
             product_price_box = product.find("div", {"class": "price-box"}) # get pricebox
             product_price_box_classes = product_price_box.get("class") # get pricebox classes
             product_discount = "price-box--Discount" in product_price_box_classes # check if product has discount
+            product_opened = product.get("data-almostnew") == "true" # check if is product new
             product_discount_percentage = 0
+            product_price_before = product_price
             if product_discount:
                 product_discount_percentage = get_number(product_price_box.find("span", {"class": "price-box__header-text"}).text) # discount in percentage
+                product_price_before = get_number(product.find("span", {"class": "price-box__compare-price"}).text) # get price before discount
 
             self.processed_products.append({
                 "name": product_name,
@@ -171,6 +185,8 @@ class Querry_Alza(Querry):
                 "link": product_link,
                 "discount": product_discount,
                 "discount_percentage": product_discount_percentage,
+                "price_before": product_price_before,
+                "opened": product_opened,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
@@ -214,10 +230,15 @@ class Querry_CZC(Querry):
             product_id = self.shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
             product_discount = product.find("span", {"class": "price-before"}) is not None # check if product is in sale
+            product_flags = [get_pure_text(x.get_text()) for x in product.find_all("div", {"class": "sticker"})] # find all stickers
+
+            product_opened = ("zánovnízboží" in product_flags) or ("použitézboží" in product_flags) or ("rozbalenézboží" in product_flags) # check if was product opened or not
             product_discount_percentage = 0
+            product_price_before = product_price
             if product_discount:
                 price_before = product.find("span", {"class": "price-before"})
-                product_discount_percentage = 100 - ((product_price * 100) / int((get_number(price_before.find("span", {"class": "price-vatin"}).text)))) # count discount percentage
+                product_price_before = get_number(price_before.find("span", {"class": "price-vatin"}).text) # get price before
+                product_discount_percentage = 100 - ((product_price * 100) / product_price_before) # count discount percentage
                 product_discount_percentage = int(round(product_discount_percentage)) # get round number
 
             self.processed_products.append({
@@ -228,6 +249,8 @@ class Querry_CZC(Querry):
                 "link": product_link,
                 "discount": product_discount,
                 "discount_percentage": product_discount_percentage,
+                "price_before": product_price_before,
+                "opened": product_opened,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
@@ -262,7 +285,6 @@ class Querry_Datart(Querry):
         :param product:
         :return:
         """
-        # TODO: Vrací chybu
         try:
             product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
             product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
@@ -270,11 +292,14 @@ class Querry_Datart(Querry):
             product_code = json.loads(product.get("data-track"))["id"]  # code of product
             product_id = self.shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
             product_link = self.shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
-            product_discount = product.find("span", {"class": "query-icon"}) is not None
+            product_discount = product.find("span", {"class": "query-icon"}) is not None # check if product has a discount
+            product_opened = "Zánovní" in [x.get_text() for x in product.find_all("span", {"class": "flag"})] # check if was product opened or not
             product_discount_percentage = 0
+            product_price_before = product_price
             if product_discount:
                 price_before = product.find("span", {"class": "cut-price"})
-                product_discount_percentage = 100 - ((product_price * 100) / int((get_number(price_before.find("del").text)))) # count discount percentage
+                product_price_before = get_number(price_before.find("del").text) # get price before discount
+                product_discount_percentage = 100 - ((product_price * 100) / product_price_before) # count discount percentage
                 product_discount_percentage = int(round(product_discount_percentage)) # get round number
 
             self.processed_products.append({
@@ -285,6 +310,8 @@ class Querry_Datart(Querry):
                 "link": product_link,
                 "discount": product_discount,
                 "discount_percentage": product_discount_percentage,
+                "price_before": product_price_before,
+                "opened": product_opened,
                 "shop_name": self.shop_name,
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
@@ -321,21 +348,23 @@ while run:
 
                 sleep(get_time_difference())  # repeat every day at 1AM
             else:
-                print("File has not any valid quarries")
+                print("File has not any valid quarries.")
+                print("Please add your shops in csv format and start app again.")
+                print("ShopName;ProductType;SearchedLink with $page pointer.")
                 run = False
                 input("Press ENTER to exit")
         else:
-            print("File has not data inside")
+            print("File has not data inside.")
+            print("Please add your shops in csv format and start app again.")
+            print("ShopName;ProductType;SearchedLink with $page pointer.")
             run = False
             input("Press ENTER to exit")
     else:
         with open("pages.csv", "x") as file:  # create file if not exist
             file.write("")
-            print("File 'pages.csv' had been created")
-            print("Please add your shops in csv format and start app again")
-            print("ShopName;ProductType;SearchedLink with $page pointer")
+            print("File 'pages.csv' had been created.")
+            print("Please add your shops in csv format and start app again.")
+            print("ShopName;ProductType;SearchedLink with $page pointer.")
             file.close()
-
         run = False
         input("Press ENTER to exit")
-
