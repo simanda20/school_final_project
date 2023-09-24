@@ -81,10 +81,42 @@ class Miner:
                     "data": json.dumps(self.processed_products)
                 }
             )
-            logging.info("Service response: " + req.text)
+            if req.status_code in range(200, 300): # check server response
+                returned_data = json.loads(req.text)
+                if returned_data["access"]: # access granted
+                    logging.info("Service processed data succesfully")
+                else: # service error
+                    logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " + returned_data["error"]["error_message"])
+            else: # server negative response
+                logging.error("Service response: " + req.status_code + " " + req.text)
+
         except Exception as e:
             print(e)
-            logging.error(e)
+            logging.error("While sending data to service: " + str(e))
+
+    def send_probelm(self):
+        """
+        Sends information about error on web service
+        """
+        logging.info("Sending error to web service")
+        req = requests.post(
+            url=self.send_on_url,
+            data={
+                "token": self.app_token,
+                "error": self.shop_name
+            }
+        )
+        if req.status_code in range(200, 300):  # check server response
+            returned_data = json.loads(req.text)
+            if returned_data["access"]:  # access granted
+                logging.info("Service saved information abou error sucessfully")
+            else:  # service error
+                logging.error(
+                    "Service responded with: " + returned_data["error"]["error_code"] + " " + returned_data["error"][
+                        "error_message"])
+        else:  # server negative response
+            logging.error("Service response: " + req.status_code + " " + req.text)
+
 
     def process_product(self, product):
         """
@@ -130,7 +162,8 @@ class Miner:
 
             except Exception as e:
                 print(e)
-                logging.error(e)
+                logging.error("While processing page: " + str(e))
+                self.send_probelm() # send information about problem
                 break
 
             logging.info("Waiting on next page")
@@ -194,11 +227,10 @@ class Miner_Alza(Miner):
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
             })
-            logging.info("Adding new product")
             print(self.processed_products[-1])
         except Exception as e:
             print(e)
-            logging.warning("While processing product: " + e)
+            logging.warning("While processing product: " + str(e))
 
 class Miner_CZC(Miner):
     """
@@ -235,7 +267,6 @@ class Miner_CZC(Miner):
             product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
             product_discount = product.find("span", {"class": "price-before"}) is not None # check if product is in sale
             product_flags = [get_pure_text(x.get_text()) for x in product.find_all("div", {"class": "sticker"})] # find all stickers
-
             product_opened = ("zánovnízboží" in product_flags) or ("použitézboží" in product_flags) or ("rozbalenézboží" in product_flags) # check if was product opened or not
             product_discount_percentage = 0
             product_price_before = product_price
@@ -259,10 +290,9 @@ class Miner_CZC(Miner):
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
             })
-            logging.info("Adding new product")
             print(self.processed_products[-1])
         except Exception as e:
-            logging.warning("While processing product: " + e)
+            logging.warning("While processing product: " + str(e))
             print(e)
 
 class Miner_Datart(Miner):
@@ -321,10 +351,9 @@ class Miner_Datart(Miner):
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
             })
-            logging.info("Adding new product")
             print(self.processed_products[-1])
         except Exception as e:
-            logging.warning("While processing product: " + e)
+            logging.warning("While processing product: " + str(e))
             print(e)
 
 run = True
