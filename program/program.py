@@ -6,7 +6,7 @@ import json # import json
 import os # import os
 from os.path import exists # checker of file existence
 import logging # import logging
-from datetime import datetime, timedelta # import datetime and delta time
+from datetime import datetime, timedelta, date # import datetime and delta time
 
 def get_time_difference():
     """
@@ -73,6 +73,7 @@ class Miner:
         Sends data on web service
         """
         try:
+            logging.info("Sending data to web service...")
             req = requests.post( # send data on web
                 url=self.send_on_url,
                 data={
@@ -80,9 +81,10 @@ class Miner:
                     "data": json.dumps(self.processed_products)
                 }
             )
-            print(req.text)
+            logging.info("Service response: " + req.text)
         except Exception as e:
             print(e)
+            logging.error(e)
 
     def process_product(self, product):
         """
@@ -102,6 +104,7 @@ class Miner:
         while has_products:
             print(page)
             cur_url = self.url.replace("$page", str(page))  # current url address
+            logging.info("Opening page " + str(page) + " on " + cur_url)
             try:
                 req = requests.get(cur_url)  # get request
                 content = req.text  # get html of page
@@ -123,11 +126,14 @@ class Miner:
                     self.process_product(product)
 
                 page += self.page_offset  # load new page
+                logging.info("Page processed")
 
             except Exception as e:
                 print(e)
+                logging.error(e)
                 break
 
+            logging.info("Waiting on next page")
             sleep(5)  # anti block waiting
 
         self.send_products()
@@ -188,9 +194,11 @@ class Miner_Alza(Miner):
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
             })
+            logging.info("Adding new product")
             print(self.processed_products[-1])
         except Exception as e:
             print(e)
+            logging.warning("While processing product: " + e)
 
 class Miner_CZC(Miner):
     """
@@ -251,8 +259,10 @@ class Miner_CZC(Miner):
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
             })
+            logging.info("Adding new product")
             print(self.processed_products[-1])
         except Exception as e:
+            logging.warning("While processing product: " + e)
             print(e)
 
 class Miner_Datart(Miner):
@@ -311,55 +321,81 @@ class Miner_Datart(Miner):
                 "shop_url": self.shop_url,
                 "product_type": self.product_type
             })
+            logging.info("Adding new product")
             print(self.processed_products[-1])
         except Exception as e:
+            logging.warning("While processing product: " + e)
             print(e)
 
 run = True
 while run:
+    logging.basicConfig(
+        filename='logs/' + date.today() + '.log',
+        filemode='w+',
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=logging.INFO,
+        datefmt='%d-%m-%y %H:%M:%S'
+    )
+    logging.info("Starting...")
     if exists("pages.csv"):  # check existention of shop configuration file
         sites = []
         data_miners = []
+        logging.info("Reading file with pages...")
         with open("pages.csv", "r") as file:  # open file and read data
             sites = file.readlines()
             file.close()
 
+        logging.info("Processing data...")
         if len(sites) > 0:  # if are there any data
             for site in sites:
                 site = site.split(";")  # initialize data miners
                 match site[0]:
                     case "Alza":
                         data_miners.append(Miner_Alza(site[2].replace("\n", ""), site[1]))  # create new alza data miner
+                        logging.info("Creating new Alza data miner on site: " + site[2].replace("\n", ""))
                     case "CZC":
                         data_miners.append(Miner_CZC(site[2].replace("\n", ""), site[1]))  # create new CZC data miner
+                        logging.info("Creating new CZC data miner on site: " + site[2].replace("\n", ""))
                     case "Datart":
                         data_miners.append(Miner_Datart(site[2].replace("\n", ""), site[1]))  # create new Datart data miner
+                        logging.info("Creating new Datart data miner on site: " + site[2].replace("\n", ""))
                     case _:
+                        logging.warning("Unknown data miner was set: " + site[0])
                         print("Unknown data miner")  # else
 
             if len(data_miners) > 0:
+                logging.info("Starting data miners...")
                 for miner in data_miners:  # start all miners
+                    logging.info("Starting " + miner.shop_name + " " + miner.url)
                     miner.main_loop()
 
+                logging.info("Sleeping...")
                 sleep(get_time_difference())  # repeat every day at 1AM
             else:
+                logging.error("File has not any valid data miners")
                 print("File has not any valid data miners.")
                 print("Please add your shops in csv format and start app again.")
                 print("ShopName;ProductType;SearchedLink with $page pointer.")
                 run = False
+                logging.info("Application shutdown")
                 input("Press ENTER to exit")
         else:
+            logging.error("File is empty")
             print("File has not data inside.")
             print("Please add your shops in csv format and start app again.")
             print("ShopName;ProductType;SearchedLink with $page pointer.")
             run = False
+            logging.info("Application shutdown")
             input("Press ENTER to exit")
     else:
+        logging.error("File does not exist")
         with open("pages.csv", "x") as file:  # create file if not exist
             file.write("")
+            logging.info("Creating file...")
             print("File 'pages.csv' had been created.")
             print("Please add your shops in csv format and start app again.")
             print("ShopName;ProductType;SearchedLink with $page pointer.")
             file.close()
         run = False
+        logging.info("Application shutdown")
         input("Press ENTER to exit")
