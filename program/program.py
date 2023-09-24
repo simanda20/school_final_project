@@ -10,8 +10,8 @@ from datetime import datetime, timedelta # import datetime and delta time
 
 def get_time_difference():
     """
-
-    :return: float time difference
+    Counts time difference between 1 AM and current time in seconds
+    :return: float time difference in seconds
     """
     current_time = datetime.now() # get current time
     next_day = current_time + timedelta(days=1) # get next day
@@ -21,9 +21,9 @@ def get_time_difference():
 
 def get_number(num):
     """
-
-    :param num:
-    :return: int
+    Gets pure number from string
+    :param num: string with seeked number
+    :return: int searched number
     """
     numbers_only = ""
     for c in num:
@@ -34,28 +34,28 @@ def get_number(num):
 
 def get_pure_text(text):
     """
-
-    :param text:
-    :return:
+    Replaces line breaks and spaces
+    :param text: string with line breaks and spaces
+    :return: string without line breaks and spaces
     """
     text = text.replace("\n", "") # remove line breaks
     text = re.sub(r'\s+', '', text) # remove spaces
     return text
 
-class Querry:
+class Miner:
     """
-        class representicng web querry
+        class representicng web data miner
     """
     def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type):
         """
-
-        :param _shop_name:
-        :param _shop_url:
-        :param _url:
-        :param _starting_page:
-        :param _page_offset:
-        :param _product_box_class:
-        :param _product_type:
+        Constructor of data miner
+        :param _shop_name: string with name of shop
+        :param _shop_url: string with url of shop
+        :param _url: string with searched url and $page pointer
+        :param _starting_page: int with starting page
+        :param _page_offset: int with page offset
+        :param _product_box_class: string with class of product box on page
+        :param _product_type: string with product type for db
         """
         self.shop_name = _shop_name  # shop name
         self.shop_url = _shop_url  # shop url
@@ -70,8 +70,7 @@ class Querry:
 
     def send_products(self):
         """
-
-        :return:
+        Sends data on web service
         """
         try:
             req = requests.post( # send data on web
@@ -87,15 +86,14 @@ class Querry:
 
     def process_product(self, product):
         """
-
-        :param product:
+        Process given product and gets data from it. For each shop is this method different
+        :param product: string with html structure of product
         """
         pass
 
     def main_loop(self):
         """
-
-        :return:
+        Data scraper loading all products from page
         """
         has_products = True  # while checker
         page = self.starting_page  # page
@@ -134,15 +132,15 @@ class Querry:
 
         self.send_products()
 
-class Querry_Alza(Querry):
+class Miner_Alza(Miner):
     """
-        class representing web querry for Alza
+        class representing web data miner for Alza
     """
     def __init__(self, _link, _product_type):
         """
-
-        :param _link:
-        :param _product_type:
+        Constructor of alza data miner
+        :param _link: string sith searched url and $page pointer
+        :param _product_type: string with product type
         """
         super().__init__(
             "Alza",
@@ -156,9 +154,8 @@ class Querry_Alza(Querry):
 
     def process_product(self, product):
         """
-
-        :param product: html element of product with needed data
-        :return:
+        Process given product and gets data from it. Used for alza html structure
+        :param product: string with html structure of product
         """
         try:
             product_name = product.find("a", {"class": "name"}).text  # get product name
@@ -195,15 +192,15 @@ class Querry_Alza(Querry):
         except Exception as e:
             print(e)
 
-class Querry_CZC(Querry):
+class Miner_CZC(Miner):
     """
-        class representing web querry for CZC
+        class representing web data miner for CZC
     """
     def __init__(self, _link, _product_type):
         """
-
-        :param _link:
-        :param _product_type:
+        Constructor of CZC data miner
+        :param _link: string sith searched url and $page pointer
+        :param _product_type: string with product type
         """
         super().__init__(
             "CZC",
@@ -217,9 +214,8 @@ class Querry_CZC(Querry):
 
     def process_product(self, product):
         """
-
-        :param product: html element of product with needed data
-        :return:
+        Process given product and gets data from it. Used for CZC html structure
+        :param product: string with html structure of product
         """
         try:
             product_name = product.find("div", {"class": "overflow"}).find("a").text.split("\n")[0]  # get product name
@@ -259,15 +255,15 @@ class Querry_CZC(Querry):
         except Exception as e:
             print(e)
 
-class Querry_Datart(Querry):
+class Miner_Datart(Miner):
     """
-        class representing web querry for Datart
+        class representing web data miner for Datart
     """
     def __init__(self , _link, _product_type):
         """
-
-        :param _link:
-        :param _product_type:
+        Constructor of Datart data miner
+        :param _link: string sith searched url and $page pointer
+        :param _product_type: string with product type
         """
         super().__init__(
             "Datart",
@@ -281,9 +277,8 @@ class Querry_Datart(Querry):
 
     def process_product(self, product):
         """
-
-        :param product:
-        :return:
+        Process given product and gets data from it. Used for datart html structure
+        :param product: string with html structure of product
         """
         try:
             product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
@@ -324,31 +319,31 @@ run = True
 while run:
     if exists("pages.csv"):  # check existention of shop configuration file
         sites = []
-        querries = []
+        data_miners = []
         with open("pages.csv", "r") as file:  # open file and read data
             sites = file.readlines()
             file.close()
 
         if len(sites) > 0:  # if are there any data
             for site in sites:
-                site = site.split(";")  # initialize querries
+                site = site.split(";")  # initialize data miners
                 match site[0]:
                     case "Alza":
-                        querries.append(Querry_Alza(site[2].replace("\n", ""), site[1]))  # create new alza querry
+                        data_miners.append(Miner_Alza(site[2].replace("\n", ""), site[1]))  # create new alza data miner
                     case "CZC":
-                        querries.append(Querry_CZC(site[2].replace("\n", ""), site[1]))  # create new CZC querry
+                        data_miners.append(Miner_CZC(site[2].replace("\n", ""), site[1]))  # create new CZC data miner
                     case "Datart":
-                        querries.append(Querry_Datart(site[2].replace("\n", ""), site[1]))  # create new Datart querry
+                        data_miners.append(Miner_Datart(site[2].replace("\n", ""), site[1]))  # create new Datart data miner
                     case _:
-                        print("Unknown querry")  # else
+                        print("Unknown data miner")  # else
 
-            if len(querries) > 0:
-                for querry in querries:  # start all querries
-                    querry.main_loop()
+            if len(data_miners) > 0:
+                for miner in data_miners:  # start all miners
+                    miner.main_loop()
 
                 sleep(get_time_difference())  # repeat every day at 1AM
             else:
-                print("File has not any valid quarries.")
+                print("File has not any valid data miners.")
                 print("Please add your shops in csv format and start app again.")
                 print("ShopName;ProductType;SearchedLink with $page pointer.")
                 run = False
