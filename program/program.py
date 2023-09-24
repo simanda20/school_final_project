@@ -329,8 +329,13 @@ class Miner_Datart(Miner):
 
 run = True
 while run:
+    if not os.path.exists("logs"): # check if folder with logs exists or not
+        current_directory = os.getcwd() # get current directory
+        path = os.path.join(current_directory, "logs") # prepare path of new directory
+        os.mkdir(path) # create directory
+
     logging.basicConfig(
-        filename='logs/' + date.today() + '.log',
+        filename='logs/' + str(date.today()) + '.log',
         filemode='w+',
         format='%(asctime)s - %(levelname)s - %(message)s',
         level=logging.INFO,
