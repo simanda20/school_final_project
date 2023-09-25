@@ -94,7 +94,7 @@ class Miner:
             print(e)
             logging.error("While sending data to service: " + str(e))
 
-    def send_probelm(self):
+    def send_problem(self):
         """
         Sends information about error on web service
         """
@@ -163,7 +163,7 @@ class Miner:
             except Exception as e:
                 print(e)
                 logging.error("While processing page: " + str(e))
-                self.send_probelm() # send information about problem
+                self.send_problem() # send information about problem
                 break
 
             logging.info("Waiting on next page")
