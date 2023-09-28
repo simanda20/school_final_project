@@ -383,6 +383,7 @@ while run:
         if len(sites) > 0:  # if are there any data
             for site in sites:
                 site = site.split(";")  # initialize data miners
+                """
                 match site[0]:
                     case "Alza":
                         data_miners.append(Miner_Alza(site[2].replace("\n", ""), site[1]))  # create new alza data miner
@@ -396,6 +397,13 @@ while run:
                     case _:
                         logging.warning("Unknown data miner was set: " + site[0])
                         print("Unknown data miner")  # else
+                """
+                try:
+                    data_miners.append(locals()[site[3].replace("\n", "")](site[2].replace("\n", ""), site[1]))  # get miner for site
+                    logging.info("Creating new "+ site[0] +"data miner on site: " + site[2].replace("\n", ""))
+                except Exception as e:
+                    print(str(e))
+                    logging.error(str(e))
 
             if len(data_miners) > 0:
                 logging.info("Starting data miners...")
