@@ -82,7 +82,7 @@ class Miner:
                 }
             )
             if req.status_code in range(200, 300): # check server response
-                returned_data = json.loads(req.text)
+                returned_data = req.json()
                 if returned_data["access"]: # access granted
                     logging.info("Service processed data succesfully")
                 else: # service error
