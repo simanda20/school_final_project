@@ -9,9 +9,8 @@ def get_time_difference():
     :return: float time difference in seconds
     """
     current_time = datetime.now() # get current time
-    next_day = current_time + timedelta(days=1) # get next day
-    next_day = next_day.replace(hour=1, minute=0, second=0, microsecond=0) # get first hour of next day
-    time_difference = next_day - current_time # calculate time difference
+    next_cycle = current_time + timedelta(hours=3) # get next 3 hours
+    time_difference = next_cycle - current_time # calculate time difference
     return time_difference.total_seconds() # convert time difference to seconds and return
 
 run = True
