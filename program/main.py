@@ -63,7 +63,7 @@ while run:
                 miner.logging.error("File has not any valid data miners")
                 print("File has not any valid data miners.")
                 print("Please add your shops in csv format and start app again.")
-                print("ShopName;ProductType;SearchedLink with $page pointer.")
+                print("ShopName;ProductType;SearchedLink with $page pointer;name of dataminer")
                 run = False
                 miner.logging.info("Application shutdown")
                 input("Press ENTER to exit")
@@ -71,7 +71,7 @@ while run:
             miner.logging.error("File is empty")
             print("File has not data inside.")
             print("Please add your shops in csv format and start app again.")
-            print("ShopName;ProductType;SearchedLink with $page pointer.")
+            print("ShopName;ProductType;SearchedLink with $page pointer;name of dataminer")
             run = False
             miner.logging.info("Application shutdown")
             input("Press ENTER to exit")
@@ -82,7 +82,7 @@ while run:
             miner.logging.info("Creating file...")
             print("File 'pages.csv' had been created.")
             print("Please add your shops in csv format and start app again.")
-            print("ShopName;ProductType;SearchedLink with $page pointer.")
+            print("ShopName;ProductType;SearchedLink with $page pointer;name of dataminer")
             file.close()
         run = False
         miner.logging.info("Application shutdown")
