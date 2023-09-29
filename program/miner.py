@@ -58,27 +58,33 @@ class Miner:
         """
         Sends data on web service
         """
-        try:
-            logging.info("Sending data to web service...")
-            req = requests.post( # send data on web
-                url=self.send_on_url,
-                data={
-                    "token": self.app_token,
-                    "data": json.dumps(self.processed_products)
-                }
-            )
-            if req.status_code in range(200, 300): # check server response
-                returned_data = req.json()
-                if returned_data["access"]: # access granted
-                    logging.info("Service processed data succesfully")
-                else: # service error
-                    logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " + returned_data["error"]["error_message"])
-            else: # negative response from server
-                logging.error("Service response: " + req.status_code + " " + req.text)
+        if len(self.processed_products) > 0:
+            try:
+                logging.info("Sending data to web service...")
+                req = requests.post(  # send data on web
+                    url=self.send_on_url,
+                    data={
+                        "token": self.app_token,
+                        "data": json.dumps(self.processed_products)
+                    }
+                )
+                self.processed_products.clear()  # clear processed products
+                if req.status_code in range(200, 300):  # check server response
+                    returned_data = req.json()
+                    if returned_data["access"]:  # access granted
+                        logging.info("Service processed data succesfully")
+                    else:  # service error
+                        logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " +
+                                      returned_data["error"]["error_message"])
+                else:  # negative response from server
+                    logging.error("Service response: " + req.status_code + " " + req.text)
 
-        except Exception as e:
-            print(e)
-            logging.error("While sending data to service: " + str(e))
+            except Exception as e:
+                print(e)
+                logging.error("While sending data to service: " + str(e))
+
+        else:
+            logging.error("There are no processed products to send")
 
     def send_problem(self):
         """
@@ -153,9 +159,10 @@ class Miner:
                 break
 
             logging.info("Waiting on next page")
+            self.send_products() # send products
             sleep(5)  # anti block waiting
 
-        self.send_products()
+
 
 class Miner_Alza(Miner):
     """
