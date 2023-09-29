@@ -9,7 +9,7 @@ class Miner:
     """
         class representing web data miner
     """
-    def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type):
+    def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type, _app_token, _send_on_url):
         """
         Constructor of data miner
         :param _shop_name: string with name of shop
@@ -27,9 +27,9 @@ class Miner:
         self.starting_page = _starting_page # starting page
         self.page_offset = _page_offset # page offset
         self.product_box_class = _product_box_class # product box class
-        self.app_token = 123456789  # token
+        self.app_token = _app_token  # token
         self.processed_products = [] # processed products
-        self.send_on_url = "http://mujweb.simane.cz/actions/data_listener.php" # url for saving data
+        self.send_on_url = _send_on_url # url for saving data
 
     def get_number(self, num):
         """
@@ -117,7 +117,7 @@ class Miner:
         """
         pass
 
-    def main_loop(self):
+    def main_loop(self, _sleeping_between_requests_seconds):
         """
         Data scraper loading all products from page
         """
@@ -160,7 +160,7 @@ class Miner:
 
             logging.info("Waiting on next page")
             self.send_products() # send products
-            sleep(5)  # anti block waiting
+            sleep(_sleeping_between_requests_seconds)  # anti block waiting
 
 
 
@@ -168,7 +168,7 @@ class Miner_Alza(Miner):
     """
         class representing web data miner for Alza
     """
-    def __init__(self, _link, _product_type):
+    def __init__(self, _link, _product_type, _app_token, _send_on_url):
         """
         Constructor of alza data miner
         :param _link: string sith searched url and $page pointer
@@ -181,7 +181,9 @@ class Miner_Alza(Miner):
             1,
             1,
             "box",
-            _product_type
+            _product_type,
+            _app_token,
+            _send_on_url
         )
 
     def process_product(self, product):
@@ -229,7 +231,7 @@ class Miner_CZC(Miner):
     """
         class representing web data miner for CZC
     """
-    def __init__(self, _link, _product_type):
+    def __init__(self, _link, _product_type, _app_token, _send_on_url):
         """
         Constructor of CZC data miner
         :param _link: string sith searched url and $page pointer
@@ -242,7 +244,9 @@ class Miner_CZC(Miner):
             0,
             27,
             "new-tile",
-            _product_type
+            _product_type,
+            _app_token,
+            _send_on_url
         )
 
     def process_product(self, product):
@@ -292,7 +296,7 @@ class Miner_Datart(Miner):
     """
         class representing web data miner for Datart
     """
-    def __init__(self , _link, _product_type):
+    def __init__(self , _link, _product_type, _app_token, _send_on_url):
         """
         Constructor of Datart data miner
         :param _link: string sith searched url and $page pointer
@@ -305,7 +309,9 @@ class Miner_Datart(Miner):
             1,
             1,
             "product-box",
-            _product_type
+            _product_type,
+            _app_token,
+            _send_on_url
         )
 
     def process_product(self, product):

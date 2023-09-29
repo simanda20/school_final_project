@@ -3,13 +3,14 @@ from os.path import exists # checker of file existence
 from datetime import datetime, timedelta, date # import datetime and delta time
 import miner # import miner class, subclasses, sleep and logging
 
-def get_time_difference():
+def get_time_difference(hours):
     """
     Counts time difference between current time and givven interval in seconds
     :return: float time difference in seconds
     """
     current_time = datetime.now() # get current time
-    next_cycle = current_time + timedelta(hours=3) # get next 3 hours
+    next_cycle = current_time + timedelta(hours=hours) # get next configurated
+    # hours
     time_difference = next_cycle - current_time # calculate time difference
     return time_difference.total_seconds() # convert time difference to seconds and return
 
@@ -38,10 +39,10 @@ while run:
     configurated = False
     if exists("configuration.json"): # check if cofiguration file exists
         configuration_data = ""
-        with open("configuratin.json", "r") as file: # open configuration file
+        with open("configuration.json", "r") as file: # open configuration file
             configuration_data = file.read() # read all text from configuration.json file
             file.close() # close file
-        configuration = miner.json.loads() # parse json data from file
+        configuration = miner.json.loads(configuration_data) # parse json data from file
         if configuration["web_service_address"] != "": # check if address works
             req = miner.requests.post( # send testing request on service
                 url=configuration["web_service_address"],
@@ -63,6 +64,8 @@ while run:
                         print("There are not set all needed configuration variables")
                 else:  # service error
                     miner.logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " +
+                                  returned_data["error"]["error_message"])
+                    print("Service responded with: " + returned_data["error"]["error_code"] + " " +
                                   returned_data["error"]["error_message"])
             else:  # negative response from server
                 miner.logging.error("Service response: " + req.status_code + " " + req.text)
@@ -90,7 +93,14 @@ while run:
                 for site in sites:
                     site = site.split(";")  # initialize data miners
                     try: # set miners
-                        data_miners.append(getattr(miner, site[3].replace("\n", ""))(site[2].replace("\n", ""), site[1]))  # get miner for site
+                        data_miners.append(  # get miner for site
+                            getattr(miner, site[3].replace("\n", ""))( # prepare data miner
+                                site[2].replace("\n", ""), # miner page
+                                site[1], # shop name
+                                configuration["application_token"], # token
+                                configuration["web_service_address"] # web service address
+                            )
+                        )
                         miner.logging.info("Creating new "+ site[0] +" data miner on site: " + site[2].replace("\n", ""))
                     except AttributeError as e: # if miner do not exist
                         print(str(e))
@@ -103,10 +113,10 @@ while run:
                     miner.logging.info("Starting data miners...")
                     for data_miner in data_miners:  # start all miners
                         miner.logging.info("Starting " + data_miner.shop_name + " " + data_miner.url)
-                        data_miner.main_loop()
+                        data_miner.main_loop(configuration["request_time_seconds"]) # initialize main loop
 
                     miner.logging.info("Sleeping...")
-                    miner.sleep(get_time_difference())  # repeat
+                    miner.sleep(get_time_difference(configuration["sleeping_time_hours"]))  # repeat
                 else:
                     miner.logging.error("File has not any valid data miners")
                     print("File has not any valid data miners.")
@@ -139,3 +149,4 @@ while run:
         print("Program was not configurated properly. Please open configuration file and set up app before starting")
         print("Application shut down")
         input("Press ENTER to exit")
+        run = False
