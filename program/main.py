@@ -43,7 +43,7 @@ while run:
                 site = site.split(";")  # initialize data miners
                 try: # set miners
                     data_miners.append(getattr(miner, site[3].replace("\n", ""))(site[2].replace("\n", ""), site[1]))  # get miner for site
-                    miner.logging.info("Creating new "+ site[0] +"data miner on site: " + site[2].replace("\n", ""))
+                    miner.logging.info("Creating new "+ site[0] +" data miner on site: " + site[2].replace("\n", ""))
                 except AttributeError as e: # if miner do not exist
                     print(str(e))
                     miner.logging.error("Unknown data miner: " + str(e))

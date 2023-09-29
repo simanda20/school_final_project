@@ -7,7 +7,7 @@ import logging # import logging
 
 class Miner:
     """
-        class representicng web data miner
+        class representing web data miner
     """
     def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type):
         """
