@@ -57,7 +57,7 @@ while run:
                     data_miner.main_loop()
 
                 miner.logging.info("Sleeping...")
-                miner.sleep(get_time_difference())  # repeat every day at 1AM
+                miner.sleep(get_time_difference())  # repeat
             else:
                 miner.logging.error("File has not any valid data miners")
                 print("File has not any valid data miners.")
