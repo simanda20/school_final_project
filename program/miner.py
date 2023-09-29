@@ -84,7 +84,7 @@ class Miner:
                 logging.error("While sending data to service: " + str(e))
 
         else:
-            logging.error("There are no processed products to send")
+            logging.error("There are not any processed products to send")
 
     def send_problem(self):
         """
