@@ -124,6 +124,8 @@ while run:
                         miner.logging.info("Starting " + data_miner.shop_name + " " + data_miner.url)
                         data_miner.main_loop(configuration["request_time_seconds"]) # initialize main loop
 
+                    print("Data processed.")
+                    print("Sleeping...")
                     miner.logging.info("Sleeping...")
                     miner.sleep(get_time_difference(configuration["sleeping_time_hours"]))  # repeat
                 else:
