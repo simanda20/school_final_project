@@ -3,18 +3,31 @@ from os.path import exists # checker of file existence
 from datetime import datetime, timedelta, date # import datetime and delta time
 import miner # import miner class, subclasses, sleep and logging
 
-def get_time_difference(hours):
+def new_logging_file():
+    miner.logging.basicConfig(
+        filename='logs/' + str(date.today()) + '-' + str(datetime.now().hour) + '.log',
+        filemode='w+',
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=miner.logging.INFO,
+        datefmt='%d-%m-%y %H:%M:%S'
+    )
+
+def get_time_difference(starting_time, hours):
     """
-    Counts time difference between current time and givven interval in seconds
+    Counts time difference between current time and given interval in seconds
     :return: float time difference in seconds
     """
-    current_time = datetime.now() # get current time
-    next_cycle = current_time + timedelta(hours=hours) # get next configurated
-    time_difference = next_cycle - current_time # calculate time difference
-    return time_difference.total_seconds() # convert time difference to seconds and return
+    next_cycle = starting_time + timedelta(hours=hours) # get next configurated
+    time_difference = next_cycle - starting_time # calculate time difference
+    if time_difference.total_seconds() < 0:
+        return 0 # start now
+    else:  # check if time difference is not smaller than time of execution of miners
+        return time_difference.total_seconds()
+
 
 run = True
 while run:
+    starting_time = datetime.now() # get starting time
     configuration = { # json configuration patern
         "web_service_address": "", # address of web service
         "sleeping_time_hours": 0, # sleeping time between cycles of data mineing
@@ -26,14 +39,7 @@ while run:
         current_directory = os.getcwd() # get current directory
         path = os.path.join(current_directory, "logs") # prepare path of new directory
         os.mkdir(path) # create directory
-
-    miner.logging.basicConfig(
-        filename='logs/' + str(date.today()) + '-' +str(datetime.now().hour)+ '.log',
-        filemode='w+',
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        level=miner.logging.INFO,
-        datefmt='%d-%m-%y %H:%M:%S'
-    )
+    new_logging_file() # setup logging
     miner.logging.info("Starting...")
     configurated = False
     if exists("configuration.json"): # check if cofiguration file exists
@@ -127,7 +133,7 @@ while run:
                     print("Data processed.")
                     print("Sleeping...")
                     miner.logging.info("Sleeping...")
-                    miner.sleep(get_time_difference(configuration["sleeping_time_hours"]))  # repeat
+                    miner.sleep(get_time_difference(starting_time, configuration["sleeping_time_hours"]))  # repeat
                 else:
                     miner.logging.error("File has not any valid data miners")
                     print("File has not any valid data miners.")
