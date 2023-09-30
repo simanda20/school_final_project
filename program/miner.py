@@ -216,8 +216,14 @@ class Miner_Alza(Miner):
             product_discount_percentage = 0
             product_price_before = product_price
             if product_discount:
-                product_discount_percentage = self.get_number(product_price_box.find("span", {"class": "price-box__header-text"}).text) # discount in percentage
-                product_price_before = self.get_number(product.find("span", {"class": "price-box__compare-price"}).text) # get price before discount
+                check_if_percentage_avalible = product_price_box.find("span", {"class": "price-box__header-text"}).text == "Zlevněno " # check if data about discount avalible
+                if check_if_percentage_avalible:
+                    product_discount_percentage = self.get_number(product_price_box.find("span", {
+                        "class": "price-box__header-text"}).text)  # discount in percentage
+                    product_price_before = self.get_number(
+                        product.find("span", {"class": "price-box__compare-price"}).text)  # get price before discount
+                else:
+                    product_discount = check_if_percentage_avalible
 
             self.processed_products.append({
                 "name": product_name,
