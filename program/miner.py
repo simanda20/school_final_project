@@ -337,37 +337,47 @@ class Miner_Datart(Miner):
         :param product: string with html structure of product
         """
         try:
-            product_name = product.find("div", {"class": "item-title-holder"}).find("a").text  # get product name
-            product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
-            product_price = self.get_number(product_price_sep) # get price
-            product_code = json.loads(product.get("data-track"))["id"]  # code of product
-            product_id = self.shop_name + json.loads(product.get("data-track"))["id"]  # product id used by eshop with shopname at start
-            product_link = self.shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get("href")  # product link
-            product_discount = product.find("span", {"class": "query-icon"}) is not None # check if product has a discount
-            product_opened = "Zánovní" in [x.get_text() for x in product.find_all("span", {"class": "flag"})] # check if was product opened or not
-            product_discount_percentage = 0
-            product_price_before = product_price
-            if product_discount:
-                price_before = product.find("span", {"class": "cut-price"})
-                product_price_before = self.get_number(price_before.find("del").text) # get price before discount
-                product_discount_percentage = 100 - ((product_price * 100) / product_price_before) # count discount percentage
-                product_discount_percentage = int(round(product_discount_percentage)) # get round number
+            product_name_container = product.find("div", {"class": "item-title-holder"})  # get product name
+            if product_name_container is not None: # check if product is not just ad
+                product_name = product_name_container.find("a").text
+                product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
+                product_price = self.get_number(product_price_sep)  # get price
+                product_code = json.loads(product.get("data-track"))["id"]  # code of product
+                product_id = self.shop_name + json.loads(product.get("data-track"))[
+                    "id"]  # product id used by eshop with shopname at start
+                product_link = self.shop_url + product.find("div", {"class": "item-title-holder"}).find("a").get(
+                    "href")  # product link
+                product_discount = product.find("span",
+                                                {"class": "query-icon"}) is not None  # check if product has a discount
+                product_opened = "Zánovní" in [x.get_text() for x in product.find_all("span", {
+                    "class": "flag"})]  # check if was product opened or not
+                product_discount_percentage = 0
+                product_price_before = product_price
+                if product_discount:
+                    price_before = product.find("span", {"class": "cut-price"})
+                    product_price_before = self.get_number(price_before.find("del").text)  # get price before discount
+                    product_discount_percentage = 100 - (
+                                (product_price * 100) / product_price_before)  # count discount percentage
+                    product_discount_percentage = int(round(product_discount_percentage))  # get round number
 
-            self.processed_products.append({
-                "name": product_name,
-                "price": product_price,
-                "code": product_code,
-                "id": product_id,
-                "link": product_link,
-                "discount": product_discount,
-                "discount_percentage": product_discount_percentage,
-                "price_before": product_price_before,
-                "opened": product_opened,
-                "shop_name": self.shop_name,
-                "shop_url": self.shop_url,
-                "product_type": self.product_type
-            })
-            print(self.processed_products[-1])
+                self.processed_products.append({
+                    "name": product_name,
+                    "price": product_price,
+                    "code": product_code,
+                    "id": product_id,
+                    "link": product_link,
+                    "discount": product_discount,
+                    "discount_percentage": product_discount_percentage,
+                    "price_before": product_price_before,
+                    "opened": product_opened,
+                    "shop_name": self.shop_name,
+                    "shop_url": self.shop_url,
+                    "product_type": self.product_type
+                })
+                print(self.processed_products[-1])
+            else:
+                print("Product is just ad.")
+
         except Exception as e:
             logging.warning("While processing product: " + str(e))
             print(e)
