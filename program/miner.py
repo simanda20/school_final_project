@@ -9,7 +9,18 @@ class Miner:
     """
         class representing web data miner
     """
-    def __init__(self, _shop_name, _shop_url, _url, _starting_page, _page_offset, _product_box_class, _product_type, _app_token, _send_on_url):
+    def __init__(
+            self,
+            _shop_name,
+            _shop_url,
+            _url,
+            _starting_page,
+            _page_offset,
+            _product_box_class,
+            _product_type,
+            _app_token,
+            _send_on_url
+    ):
         """
         Constructor of data miner
         :param _shop_name: string with name of shop

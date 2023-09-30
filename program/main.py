@@ -10,7 +10,6 @@ def get_time_difference(hours):
     """
     current_time = datetime.now() # get current time
     next_cycle = current_time + timedelta(hours=hours) # get next configurated
-    # hours
     time_difference = next_cycle - current_time # calculate time difference
     return time_difference.total_seconds() # convert time difference to seconds and return
 
@@ -20,7 +19,7 @@ while run:
         "web_service_address": "", # address of web service
         "sleeping_time_hours": 0, # sleeping time between cycles of data mineing
         "request_time_seconds": 5, # sleeping time between requests
-        "application_token": 123546789 # application token
+        "application_token": 123456789 # application token
     }
 
     if not os.path.exists("logs"): # check if folder with logs exists or not
@@ -29,7 +28,7 @@ while run:
         os.mkdir(path) # create directory
 
     miner.logging.basicConfig(
-        filename='logs/' + str(date.today()) + '.log',
+        filename='logs/' + str(date.today()) + '-' +str(datetime.now().hour)+ '.log',
         filemode='w+',
         format='%(asctime)s - %(levelname)s - %(message)s',
         level=miner.logging.INFO,
@@ -63,10 +62,18 @@ while run:
                         miner.logging.error("There are not set all needed configuration variables")
                         print("There are not set all needed configuration variables")
                 else:  # service error
-                    miner.logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " +
-                                  returned_data["error"]["error_message"])
-                    print("Service responded with: " + returned_data["error"]["error_code"] + " " +
-                                  returned_data["error"]["error_message"])
+                    miner.logging.error(
+                        "Service responded with: " +
+                        returned_data["error"]["error_code"] +
+                        " " +
+                        returned_data["error"]["error_message"]
+                    )
+                    print(
+                        "Service responded with: " +
+                        returned_data["error"]["error_code"] +
+                        " " +
+                        returned_data["error"]["error_message"]
+                    )
             else:  # negative response from server
                 miner.logging.error("Service response: " + req.status_code + " " + req.text)
     else:
@@ -101,7 +108,9 @@ while run:
                                 configuration["web_service_address"] # web service address
                             )
                         )
-                        miner.logging.info("Creating new "+ site[0] +" data miner on site: " + site[2].replace("\n", ""))
+                        miner.logging.info(
+                            "Creating new "+ site[0] +" data miner on site: " + site[2].replace("\n", "")
+                        )
                     except AttributeError as e: # if miner do not exist
                         print(str(e))
                         miner.logging.error("Unknown data miner: " + str(e))
