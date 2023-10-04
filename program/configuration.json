@@ -1,1 +1,1 @@
-{"web_service_address": "http://mujweb.simane.cz/actions/data_listener.php", "sleeping_time_hours": 1, "request_time_seconds": 5, "application_token": 123456789}
+{"web_service_address": "http://mujweb.simane.cz/actions/data_listener.php", "sleeping_time_hours": 3, "request_time_seconds": 5, "application_token": 123456789}

@@ -71,7 +71,6 @@ class Miner:
         """
         if len(self.processed_products) > 0:
             try:
-                logging.info("Sending data to web service...")
                 req = requests.post(  # send data on web
                     url=self.send_on_url,
                     data={
@@ -83,12 +82,17 @@ class Miner:
                 if req.status_code in range(200, 300):  # check server response
                     returned_data = req.json()
                     if returned_data["access"]:  # access granted
-                        logging.info("Service processed data succesfully")
+                        print("Service processed data succesfully")
                     else:  # service error
                         logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " +
                                       returned_data["error"]["error_message"])
                 else:  # negative response from server
+                    print("Service response: " + req.status_code + " " + req.text)
                     logging.error("Service response: " + req.status_code + " " + req.text)
+
+            except requests.exceptions.ConnectionError as e: # handle no internet connection
+                print("Connection to the internet was lost")
+                logging.error("No internet connection")
 
             except Exception as e:
                 print(e)
@@ -102,23 +106,33 @@ class Miner:
         Sends information about error on web service
         """
         logging.info("Sending error to web service")
-        req = requests.post(
-            url=self.send_on_url,
-            data={
-                "token": self.app_token,
-                "error": self.shop_name
-            }
-        )
-        if req.status_code in range(200, 300):  # check server response
-            returned_data = json.loads(req.text)
-            if returned_data["access"]:  # access granted
-                logging.info("Service saved information abou error sucessfully")
-            else:  # service error
-                logging.error(
-                    "Service responded with: " + returned_data["error"]["error_code"] + " " + returned_data["error"][
-                        "error_message"])
-        else:  # server negative response
-            logging.error("Service response: " + req.status_code + " " + req.text)
+        try:
+            req = requests.post(
+                url=self.send_on_url,
+                data={
+                    "token": self.app_token,
+                    "error": self.shop_name
+                }
+            )
+            if req.status_code in range(200, 300):  # check server response
+                returned_data = json.loads(req.text)
+                if returned_data["access"]:  # access granted
+                    logging.info("Service saved information abou error sucessfully")
+                else:  # service error
+                    logging.error(
+                        "Service responded with: " + returned_data["error"]["error_code"] + " " +
+                        returned_data["error"][
+                            "error_message"])
+            else:  # server negative response
+                logging.error("Service response: " + req.status_code + " " + req.text)
+
+        except requests.exceptions.ConnectionError as e:  # handle no internet connection
+            print("Connection to the internet was lost")
+            logging.error("No internet connection")
+
+        except Exception as e:
+            print(e)
+            logging.error("Unknown exception: " + str(e))
 
 
     def process_product(self, product):
@@ -139,7 +153,6 @@ class Miner:
         while has_products:
             print(page)
             cur_url = self.url.replace("$page", str(page))  # current url address
-            logging.info("Opening page " + str(page) + " on " + cur_url)
             try:
                 req = requests.get(cur_url)  # get request
                 content = req.text  # get html of page
@@ -161,7 +174,6 @@ class Miner:
                     self.process_product(product)
 
                 page += self.page_offset  # load new page
-                logging.info("Page processed")
 
             except Exception as e:
                 print(e)
@@ -169,7 +181,6 @@ class Miner:
                 self.send_problem() # send information about problem
                 break
 
-            logging.info("Waiting on next page")
             self.send_products() # send products
             sleep(_sleeping_between_requests_seconds)  # anti block waiting
 
