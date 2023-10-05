@@ -8,7 +8,6 @@ def get_time_difference(starting_time, hours):
     Counts time difference between current time and given interval in seconds
     :return: float time difference in seconds
     """
-
     next_cycle = starting_time + timedelta(hours=hours) # get next configurated cycle
     time_difference = next_cycle - datetime.now() # calculate time difference
     if time_difference.total_seconds() <= 0:
