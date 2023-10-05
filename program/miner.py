@@ -155,25 +155,49 @@ class Miner:
             cur_url = self.url.replace("$page", str(page))  # current url address
             try:
                 req = requests.get(cur_url)  # get request
-                content = req.text  # get html of page
+                if req.status_code in range(200, 300):
+                    content = req.text  # get html of page
 
-                soup = BeautifulSoup(content, "html.parser")  # create beautifulsoup
+                    soup = BeautifulSoup(content, "html.parser")  # create beautifulsoup
 
-                body = soup.find("body")  # find html body
+                    body = soup.find("body")  # find html body
 
-                products = body.find_all("div", {"class": self.product_box_class})  # get boxes
+                    products = body.find_all("div", {"class": self.product_box_class})  # get boxes
 
-                if len(products) == 0:  # if we already seen all products break loop
-                    has_products = False
+                    if len(products) == 0:  # if we already seen all products break loop
+                        has_products = False
+                        break
+
+                    if first_product == "":  # if loop started, get first product to compare
+                        first_product = products[0]
+
+                    for product in products:  # process all products
+                        self.process_product(product)
+
+                    page += self.page_offset  # load new page
+
+                elif req.status_code in range(400,500):
+                    print("Invalid request on the server. Please check seraching url.")
+                    logging.error("Invalid request on the server. " + str(req.status_code))
                     break
 
-                if first_product == "":  # if loop started, get first product to compare
-                    first_product = products[0]
+                elif req.status_code in range(500,600):
+                    print("Server was unable to handle request. " + str(req.status_code))
+                    logging.error("Server was unable to handle request. " + str(req.status_code))
+                    self.send_problem()  # send information about problem
+                    break
 
-                for product in products:  # process all products
-                    self.process_product(product)
+                else:
+                    print("Unexpected status code: " + str(req.status_code))
+                    logging.error("Unexpected status code. " + str(req.status_code))
+                    self.send_problem() # send information about problem
+                    break
 
-                page += self.page_offset  # load new page
+            except miner.requests.exceptions.ConnectionError as e:  # handle connection
+                print("Unable to connect. We will try it again later")
+                logging.error("Unable to connect to server")
+                self.send_problem()
+                break
 
             except Exception as e:
                 print(e)

@@ -96,8 +96,8 @@ while run:
                     configuration = True
                     service_access = False
             except miner.requests.exceptions.ConnectionError as e: # handle no internet connection
-                print("Unable to connect to internet. I will try it again later")
-                miner.logging.error("Unable to connect to internet")
+                print("Unable to connect. I will try it again later")
+                miner.logging.error("Unable to connect to server")
                 connection = False
             except Exception as e:
                 print("Unknown exception: " + str(e))
