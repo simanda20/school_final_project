@@ -1,18 +1,18 @@
-import os # import os
-from os.path import exists # checker of file existence
-from datetime import datetime, timedelta, date # import datetime and delta time
-import miner # import miner class, subclasses, sleep and logging
+import os  # import os
+from os.path import exists  # checker of file existence
+from datetime import datetime, timedelta, date  # import datetime and delta time
+import miner  # import miner class, subclasses, sleep and logging
 
 
-def get_time_difference(starting_time, hours):
+def get_time_difference(start_time, hours):
     """
     Counts time difference between current time and given interval in seconds
     :return: float time difference in seconds
     """
-    next_cycle = starting_time + timedelta(hours=hours) # get next configured cycle
-    time_difference = next_cycle - datetime.now() # calculate time difference
+    next_cycle = start_time + timedelta(hours=hours)  # get next configured cycle
+    time_difference = next_cycle - datetime.now()  # calculate time difference
     if time_difference.total_seconds() <= 0:
-        return 0 # start now
+        return 0  # start now
     else:  # check if time difference is not smaller than time of execution of miners
         print("Next cycle starts at: " + str(next_cycle))
         return time_difference.total_seconds()
@@ -45,7 +45,7 @@ while run:
         )
 
         miner.logging.info("Starting...")
-        configurated = True
+        configured = True
         service_access = True
         connection = True
         if exists("configuration.json"):  # check if configuration file exists
@@ -67,8 +67,7 @@ while run:
                         returned_data = req.json()  # get json data
                         if returned_data["access"]:  # access granted
                             miner.logging.info("Service connected")
-                            if configuration["sleeping_time_hours"] is not None and configuration[
-                                "request_time_seconds"] is not None:  # check if all needed variables are set
+                            if configuration["sleeping_time_hours"] is not None and configuration["request_time_seconds"] is not None:  # check if all needed variables are set
                                 miner.logging.info("App configured successfully")
                                 print("App configured successfully")
                             else:
@@ -119,7 +118,7 @@ while run:
             miner.logging.error("Configuration file created")
             print("Configuration file created")
 
-        if configurated:
+        if configured:
             if exists("pages.csv"):  # check existent of shop configuration file
                 sites = []
                 data_miners = []
@@ -169,7 +168,7 @@ while run:
                         miner.logging.error("File has not any valid data miners")
                         print("File has not any valid data miners.")
                         print("Please add your shops in csv format and start app again.")
-                        print("ShopName;ProductType;SearchedLink with $page pointer;name of dataminer")
+                        print("ShopName;ProductType;SearchedLink with $page pointer;name of data miner")
                         run = False
                         miner.logging.info("Application shutdown")
                         input("Press ENTER to exit")
@@ -177,7 +176,7 @@ while run:
                     miner.logging.error("File is empty")
                     print("File has not data inside.")
                     print("Please add your shops in csv format and start app again.")
-                    print("ShopName;ProductType;SearchedLink with $page pointer;name of dataminer")
+                    print("ShopName;ProductType;SearchedLink with $page pointer;name of data miner")
                     run = False
                     miner.logging.info("Application shutdown")
                     input("Press ENTER to exit")
@@ -188,7 +187,7 @@ while run:
                     miner.logging.info("Creating file...")
                     print("File 'pages.csv' had been created.")
                     print("Please add your shops in csv format and start app again.")
-                    print("ShopName;ProductType;SearchedLink with $page pointer;name of dataminer")
+                    print("ShopName;ProductType;SearchedLink with $page pointer;name of data miner")
                     file.close()
                 run = False
                 miner.logging.info("Application shutdown")
