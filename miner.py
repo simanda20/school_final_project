@@ -1,14 +1,16 @@
-import re # import regex
-from time import sleep # import sleep
-import requests # import request
-from bs4 import BeautifulSoup # import beautiful soup
-import json # import json
-import logging # import logging
+import re  # import regex
+from time import sleep  # import sleep
+import requests  # import request
+from bs4 import BeautifulSoup  # import beautiful soup
+import json  # import json
+import logging  # import logging
+
 
 class Miner:
     """
         class representing web data miner
     """
+
     def __init__(
             self,
             _shop_name,
@@ -34,15 +36,16 @@ class Miner:
         self.shop_name = _shop_name  # shop name
         self.shop_url = _shop_url  # shop url
         self.url = _url  # prep url
-        self.product_type = _product_type # product type
-        self.starting_page = _starting_page # starting page
-        self.page_offset = _page_offset # page offset
-        self.product_box_class = _product_box_class # product box class
+        self.product_type = _product_type  # product type
+        self.starting_page = _starting_page  # starting page
+        self.page_offset = _page_offset  # page offset
+        self.product_box_class = _product_box_class  # product box class
         self.app_token = _app_token  # token
-        self.processed_products = [] # processed products
-        self.send_on_url = _send_on_url # url for saving data
+        self.processed_products = []  # processed products
+        self.send_on_url = _send_on_url  # url for saving data
 
-    def get_number(self, num):
+    @staticmethod
+    def get_number(num):
         """
         Gets pure number from string
         :param num: string with seeked number
@@ -55,7 +58,8 @@ class Miner:
 
         return int(numbers_only)  # return number
 
-    def get_pure_text(self, text):
+    @staticmethod
+    def get_pure_text(text):
         """
         Replaces line breaks and spaces
         :param text: string with line breaks and spaces
@@ -82,15 +86,15 @@ class Miner:
                 if req.status_code in range(200, 300):  # check server response
                     returned_data = req.json()
                     if returned_data["access"]:  # access granted
-                        print("Service processed data succesfully")
+                        print("Service processed data successfully")
                     else:  # service error
                         logging.error("Service responded with: " + returned_data["error"]["error_code"] + " " +
                                       returned_data["error"]["error_message"])
                 else:  # negative response from server
-                    print("Service response: " + req.status_code + " " + req.text)
-                    logging.error("Service response: " + req.status_code + " " + req.text)
+                    print("Service response: " + str(req.status_code) + " " + req.text)
+                    logging.error("Service response: " + str(req.status_code) + " " + req.text)
 
-            except requests.exceptions.ConnectionError as e: # handle no internet connection
+            except requests.exceptions.ConnectionError:  # handle no internet connection
                 print("Connection to the internet was lost")
                 logging.error("No internet connection")
 
@@ -117,23 +121,22 @@ class Miner:
             if req.status_code in range(200, 300):  # check server response
                 returned_data = json.loads(req.text)
                 if returned_data["access"]:  # access granted
-                    logging.info("Service saved information abou error sucessfully")
+                    logging.info("Service saved information about error successfully")
                 else:  # service error
                     logging.error(
                         "Service responded with: " + returned_data["error"]["error_code"] + " " +
                         returned_data["error"][
                             "error_message"])
             else:  # server negative response
-                logging.error("Service response: " + req.status_code + " " + req.text)
+                logging.error("Service response: " + str(req.status_code) + " " + req.text)
 
-        except requests.exceptions.ConnectionError as e:  # handle no internet connection
+        except requests.exceptions.ConnectionError:  # handle no internet connection
             print("Connection to the internet was lost")
             logging.error("No internet connection")
 
         except Exception as e:
             print(e)
             logging.error("Unknown exception: " + str(e))
-
 
     def process_product(self, product):
         """
@@ -176,12 +179,12 @@ class Miner:
 
                     page += self.page_offset  # load new page
 
-                elif req.status_code in range(400,500):
-                    print("Invalid request on the server. Please check seraching url.")
+                elif req.status_code in range(400, 500):
+                    print("Invalid request on the server. Please check searching url.")
                     logging.error("Invalid request on the server. " + str(req.status_code))
                     break
 
-                elif req.status_code in range(500,600):
+                elif req.status_code in range(500, 600):
                     print("Server was unable to handle request. " + str(req.status_code))
                     logging.error("Server was unable to handle request. " + str(req.status_code))
                     self.send_problem()  # send information about problem
@@ -190,10 +193,10 @@ class Miner:
                 else:
                     print("Unexpected status code: " + str(req.status_code))
                     logging.error("Unexpected status code. " + str(req.status_code))
-                    self.send_problem() # send information about problem
+                    self.send_problem()  # send information about problem
                     break
 
-            except miner.requests.exceptions.ConnectionError as e:  # handle connection
+            except requests.exceptions.ConnectionError:  # handle connection
                 print("Unable to connect. We will try it again later")
                 logging.error("Unable to connect to server")
                 self.send_problem()
@@ -202,22 +205,22 @@ class Miner:
             except Exception as e:
                 print(e)
                 logging.error("While processing page: " + str(e))
-                self.send_problem() # send information about problem
+                self.send_problem()  # send information about problem
                 break
 
-            self.send_products() # send products
+            self.send_products()  # send products
             sleep(_sleeping_between_requests_seconds)  # anti block waiting
 
 
-
-class Miner_Alza(Miner):
+class MinerAlza(Miner):
     """
         class representing web data miner for Alza
     """
+
     def __init__(self, _link, _product_type, _app_token, _send_on_url):
         """
         Constructor of alza data miner
-        :param _link: string sith searched url and $page pointer
+        :param _link: string with searched url and $page pointer
         :param _product_type: string with product type
         """
         super().__init__(
@@ -239,19 +242,21 @@ class Miner_Alza(Miner):
         """
         try:
             product_name = product.find("a", {"class": "name"}).text  # get product name
-            product_price_sep = product.find("span",{"class": "price-box__price"}).text  # get product price with separation
-            product_price = self.get_number(product_price_sep) # get price
+            product_price_sep = product.find("span",
+                                             {"class": "price-box__price"}).text  # get product price with separation
+            product_price = self.get_number(product_price_sep)  # get price
             product_code = product.get("data-code")  # code of product
-            product_id = self.shop_name + product.get("data-id")  # product id used by eshop with shopname at start
+            product_id = self.shop_name + product.get("data-id")  # product id used by eshop with shop name at start
             product_link = self.shop_url + product.find("a", {"class": "browsinglink"}).get("href")  # product link
-            product_price_box = product.find("div", {"class": "price-box"}) # get pricebox
-            product_price_box_classes = product_price_box.get("class") # get pricebox classes
-            product_discount = "price-box--Discount" in product_price_box_classes # check if product has discount
-            product_opened = product.get("data-almostnew") == "true" # check if is product new
+            product_price_box = product.find("div", {"class": "price-box"})  # get pricebox
+            product_price_box_classes = product_price_box.get("class")  # get pricebox classes
+            product_discount = "price-box--Discount" in product_price_box_classes  # check if product has discount
+            product_opened = product.get("data-almostnew") == "true"  # check if is product new
             product_discount_percentage = 0
             product_price_before = product_price
             if product_discount:
-                check_if_percentage_avalible = "%" in product_price_box.find("span", {"class": "price-box__header-text"}).text # check if data about discount avalible
+                check_if_percentage_avalible = "%" in product_price_box.find("span", {
+                    "class": "price-box__header-text"}).text  # check if data about discount avalible
                 if check_if_percentage_avalible:
                     product_discount_percentage = self.get_number(product_price_box.find("span", {
                         "class": "price-box__header-text"}).text)  # discount in percentage
@@ -279,14 +284,16 @@ class Miner_Alza(Miner):
             print(e)
             logging.warning("While processing product: " + str(e))
 
-class Miner_CZC(Miner):
+
+class MinerCZC(Miner):
     """
         class representing web data miner for CZC
     """
+
     def __init__(self, _link, _product_type, _app_token, _send_on_url):
         """
         Constructor of CZC data miner
-        :param _link: string sith searched url and $page pointer
+        :param _link: string with searched url and $page pointer
         :param _product_type: string with product type
         """
         super().__init__(
@@ -309,21 +316,29 @@ class Miner_CZC(Miner):
         try:
             product_name = product.find("div", {"class": "overflow"}).find("a").text.split("\n")[0]  # get product name
             price_wrapper = product.find("div", {"class": "pd-price-wrapper"})
-            product_price_sep = price_wrapper.find("span", {"class": "price-vatin"}).text  # get product price with separation
+            product_price_sep = price_wrapper.find("span",
+                                                   {"class": "price-vatin"}).text  # get product price with separation
             product_price = self.get_number(product_price_sep)  # get price
             product_code = product.get("data-product-code")  # code of product
-            product_id = self.shop_name + product.get("data-product-code")  # product id used by eshop with shopname at start
-            product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get("href")  # product link
-            product_discount = product.find("span", {"class": "price-before"}) is not None # check if product is in sale
-            product_flags = [self.get_pure_text(x.get_text()) for x in product.find_all("div", {"class": "sticker"})] # find all stickers
-            product_opened = ("zánovnízboží" in product_flags) or ("použitézboží" in product_flags) or ("rozbalenézboží" in product_flags) # check if was product opened or not
+            product_id = self.shop_name + product.get(
+                "data-product-code")  # product id used by eshop with shopname at start
+            product_link = self.shop_url + product.find("div", {"class": "overflow"}).find("a").get(
+                "href")  # product link
+            product_discount = product.find("span",
+                                            {"class": "price-before"}) is not None  # check if product is in sale
+            product_flags = [self.get_pure_text(x.get_text()) for x in
+                             product.find_all("div", {"class": "sticker"})]  # find all stickers
+            product_opened = ("zánovnízboží" in product_flags) or ("použitézboží" in product_flags) or (
+                        "rozbalenézboží" in product_flags)  # check if was product opened or not
             product_discount_percentage = 0
             product_price_before = product_price
             if product_discount:
                 price_before = product.find("span", {"class": "price-before"})
-                product_price_before = self.get_number(price_before.find("span", {"class": "price-vatin"}).text) # get price before
-                product_discount_percentage = 100 - ((product_price * 100) / product_price_before) # count discount percentage
-                product_discount_percentage = int(round(product_discount_percentage)) # get round number
+                product_price_before = self.get_number(
+                    price_before.find("span", {"class": "price-vatin"}).text)  # get price before
+                product_discount_percentage = 100 - (
+                            (product_price * 100) / product_price_before)  # count discount percentage
+                product_discount_percentage = int(round(product_discount_percentage))  # get round number
 
             self.processed_products.append({
                 "name": product_name,
@@ -344,14 +359,16 @@ class Miner_CZC(Miner):
             logging.warning("While processing product: " + str(e))
             print(e)
 
-class Miner_Datart(Miner):
+
+class MinerDatart(Miner):
     """
         class representing web data miner for Datart
     """
-    def __init__(self , _link, _product_type, _app_token, _send_on_url):
+
+    def __init__(self, _link, _product_type, _app_token, _send_on_url):
         """
         Constructor of Datart data miner
-        :param _link: string sith searched url and $page pointer
+        :param _link: string with searched url and $page pointer
         :param _product_type: string with product type
         """
         super().__init__(
@@ -373,7 +390,7 @@ class Miner_Datart(Miner):
         """
         try:
             product_name_container = product.find("div", {"class": "item-title-holder"})  # get product name
-            if product_name_container is not None: # check if product is not just ad
+            if product_name_container is not None:  # check if product is not just ad
                 product_name = product_name_container.find("a").text
                 product_price_sep = product.find("div", {"class": "actual"}).text  # get product price with separation
                 product_price = self.get_number(product_price_sep)  # get price
@@ -392,7 +409,7 @@ class Miner_Datart(Miner):
                     price_before = product.find("span", {"class": "cut-price"})
                     product_price_before = self.get_number(price_before.find("del").text)  # get price before discount
                     product_discount_percentage = 100 - (
-                                (product_price * 100) / product_price_before)  # count discount percentage
+                            (product_price * 100) / product_price_before)  # count discount percentage
                     product_discount_percentage = int(round(product_discount_percentage))  # get round number
 
                 self.processed_products.append({
