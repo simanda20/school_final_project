@@ -250,7 +250,7 @@ class MinerAlza(Miner):
             product_link = self.shop_url + product.find("a", {"class": "browsinglink"}).get("href")  # product link
             product_price_box = product.find("div", {"class": "price-box"})  # get pricebox
             product_price_box_classes = product_price_box.get("class")  # get pricebox classes
-            product_discount = "price-box--Discount" in product_price_box_classes  # check if product has discount
+            product_discount = "price-box--Discount" in product_price_box_classes or "price-box--BlackFriday" in product_price_box_classes # check if product has discount
             product_opened = product.get("data-almostnew") == "true"  # check if is product new
             product_discount_percentage = 0
             product_price_before = product_price
