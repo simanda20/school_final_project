@@ -29,9 +29,9 @@ while run:
             "application_token": 123456789  # application token
         }
 
-        if not os.path.exists("program/logs"):  # check if folder with logs exists or not
+        if not os.path.exists("logs"):  # check if folder with logs exists or not
             current_directory = os.getcwd()  # get current directory
-            path = os.path.join(current_directory, "program/logs")  # prepare path of new directory
+            path = os.path.join(current_directory, "logs")  # prepare path of new directory
             os.mkdir(path)  # create directory
 
         new_log_file = 'logs/' + str(date.today()) + '-' + str(datetime.now().hour) + "-" + str(
