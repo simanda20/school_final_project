@@ -167,7 +167,7 @@ class Miner:
 
                     products = body.find_all("div", {"class": self.product_box_class})  # get boxes
 
-                    if len(products) == 0:  # if we already seen all products break loop
+                    if len(products) == 0:  # if we have already seen all products break loop
                         has_products = False
                         break
 

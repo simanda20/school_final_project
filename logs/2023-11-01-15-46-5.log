@@ -1,0 +1,16 @@
+01-11-23 15:46:05 - INFO - Starting...
+01-11-23 15:46:05 - INFO - Service connected
+01-11-23 15:46:05 - INFO - App configured successfully
+01-11-23 15:46:05 - INFO - Reading file with pages...
+01-11-23 15:46:05 - INFO - Processing data...
+01-11-23 15:46:05 - INFO - Creating new Alza data miner on site: https://www.alza.cz/televize/18849604-p$page.htm
+01-11-23 15:46:05 - INFO - Creating new CZC data miner on site: https://www.czc.cz/mobilni-telefony/produkty?q-first=$page
+01-11-23 15:46:05 - INFO - Creating new Datart data miner on site: https://www.datart.cz/mobilni-telefony.html?showPage&page=$page&limit=16
+01-11-23 15:46:05 - INFO - Creating new CZC data miner on site: https://www.czc.cz/notebooky/produkty?q-first=$page
+01-11-23 15:46:05 - INFO - Creating new CZC data miner on site: https://www.czc.cz/televize/produkty?q-first=$page
+01-11-23 15:46:05 - INFO - Creating new Datart data miner on site: https://www.datart.cz/televize.html?showPage&page=$page&limit=16
+01-11-23 15:46:05 - INFO - Creating new Datart data miner on site: https://www.datart.cz/pc-notebooky.html?showPage&page=$page&limit=16
+01-11-23 15:46:05 - INFO - Creating new Alza data miner on site: https://www.alza.cz/mobily/18843445-p$page.htm
+01-11-23 15:46:05 - INFO - Creating new Alza data miner on site: https://www.alza.cz/notebooky/18842920-p$page.htm
+01-11-23 15:46:05 - INFO - Starting data miners...
+01-11-23 15:46:05 - INFO - Starting Alza https://www.alza.cz/televize/18849604-p$page.htm
